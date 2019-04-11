@@ -105,3 +105,6 @@ venv.bak/
 
 # IDE
 .idea
+
+thunderborg_examples
+shaft_encoder
