@@ -26,7 +26,7 @@ Generate the png/svg files with:
 
     pipenv run python generate_shaft_encoder
     
-It will generate files inside `shaft_encoder/png` (to view on screen) and `shaft_encoder/png` (to print):
+It will generate SVG files inside `shaft_encoder`:
 
  - `encoder_cut`: Used to laser-cut the disk with the encoder pattern
  - `encoder_mask`: Used to print the pattern on paper and glue it onto the disk

@@ -1,7 +1,7 @@
 import os
 import sys
 import math
-import drawSvg as draw
+import svgwrite
 
 src_dirpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src')
 sys.path.append(src_dirpath)
@@ -44,21 +44,11 @@ NUM_BANDS = 5
 all_gray_codes = generate_gray_codes(NUM_BANDS)
 
 
-def draw_page():
-    return draw.Rectangle(0, 0, *PAGE_SIZE, fill='white', stroke_width=MARKING_STROKE_WIDTH, stroke='black')
+def draw_page(dwg):
+    return dwg.rect((0, 0), PAGE_SIZE, fill='white', stroke_width=MARKING_STROKE_WIDTH, stroke='black')
 
 
 def main(target):
-    d = draw.Drawing(*PAGE_SIZE)
-
-    if target == TARGET_ALL:
-        d.draw(draw_page())
-
-    d.append(draw_shaft_encoder(center=PAGE_CENTER, encoder_starting_angle=0, target=target))
-
-    # d.setRenderSize(*PAGE_SIZE)
-    d.setPixelScale(10)  # Set number of pixels per geometry unit
-    # d.setRenderSize(400,200)  # Alternative to setPixelScale
     filename = {
         TARGET_SHAFT_ENCODER_MASK: 'encoder_mask',
         TARGET_SHAFT_ENCODER_CUT: 'encoder_cut',
@@ -68,40 +58,55 @@ def main(target):
     }[target]
     if not os.path.exists('shaft_encoder'):
         os.makedirs('shaft_encoder')
-    if not os.path.exists('shaft_encoder/svg'):
-        os.makedirs('shaft_encoder/svg')
-    if not os.path.exists('shaft_encoder/png'):
-        os.makedirs('shaft_encoder/png')
-    d.saveSvg('shaft_encoder/svg/{0}.svg'.format(filename))
-    d.savePng('shaft_encoder/png/{0}.png'.format(filename))
 
-    # Display in iPython notebook
-    # d.rasterize()  # Display as PNG
-    # d  # Display as SVG
+    dwg = svgwrite.Drawing('shaft_encoder/{0}.svg'.format(filename),
+                           size=['{0}mm'.format(int(d)) for d in PAGE_SIZE], x='0mm', y='0mm',
+                           enable_background="new 0 0 {0} {1}".format(*[int(d) for d in PAGE_SIZE]),
+                           viewBox="0 0 {0} {1}".format(*[int(d) for d in PAGE_SIZE]),
+                           )
+
+    if target == TARGET_ALL:
+        dwg.add(draw_page(dwg))
+
+    dwg.add(draw_shaft_encoder(dwg, center=PAGE_CENTER, encoder_starting_angle=0, target=target))
+
+    dwg.save()
 
 
-def draw_sensor(translate, rotate_cw, target):
-    parent_group = draw.Group(transform='translate({1} {2}) rotate({0})'.format(rotate_cw, translate[0], -translate[1]))
-    g = draw.Group(transform='translate({0} {1})'.format(-(SENSOR['sensor_hole'][0] + SENSOR['sensor_hole'][2]/2), SENSOR['sensor_hole'][1] + SENSOR['sensor_hole'][3]/2))
+def draw_sensor(dwg, translate, rotate_cw, target):
+    parent_group = dwg.g(transform='translate({1} {2}) rotate({0})'.format(180+rotate_cw, translate[0], PAGE_SIZE[1]-translate[1]))
+    g = dwg.g(transform='translate({0} {1})'.format(-(SENSOR['sensor_hole'][0] + SENSOR['sensor_hole'][2]/2), -(SENSOR['sensor_hole'][1] + SENSOR['sensor_hole'][3]/2)))
     if target & TARGET_SENSORS_SUPPORT_ENGRAVE:
-        g.draw(draw.Rectangle(0, 0, *SENSOR['size'], stroke_width=MARKING_STROKE_WIDTH, stroke='black', fill='white'))
+        g.add(dwg.rect((0, 0), SENSOR['size'], stroke_width=MARKING_STROKE_WIDTH, stroke='black', fill='white'))
     if target & TARGET_SENSORS_SUPPORT_CUT:
-        g.draw(draw.Rectangle(*SENSOR['sensor_hole'], stroke_width=MARKING_STROKE_WIDTH, stroke='black', fill='black'))
-        g.draw(draw.Circle(*SENSOR['screw_hole'][:2], SENSOR['screw_hole'][2]/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='black'))
-    parent_group.draw(g)
+        g.add(dwg.rect(SENSOR['sensor_hole'][:2], SENSOR['sensor_hole'][2:], stroke_width=MARKING_STROKE_WIDTH, stroke='black', fill='black'))
+        g.add(dwg.circle(center=(SENSOR['screw_hole'][0], SENSOR['screw_hole'][1]), r=SENSOR['screw_hole'][2]/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='black'))
+    parent_group.add(g)
     return parent_group
 
 
-def draw_arc_cw(center, inner_radius, outer_radius, beginning_angle_cw, ending_angle_cw):
-    p = draw.Path(fill='black')
-    p.arc(center[0], center[1], outer_radius, -ending_angle_cw, -beginning_angle_cw)
-    p.arc(center[0], center[1], inner_radius, -beginning_angle_cw, -ending_angle_cw, cw=True, includeL=True)
-    p.Z()
+def draw_arc_cw(dwg, center, inner_radius, outer_radius, beginning_angle_cw, ending_angle_cw):
+    p = dwg.path(fill='black')
+    svg_arc(p, center, outer_radius, beginning_angle_cw, ending_angle_cw, firstArc=True)
+    svg_arc(p, center, inner_radius, ending_angle_cw, beginning_angle_cw, cw=True)
+    p.push('Z')
     return p
 
 
-def draw_shaft_encoder(center, encoder_starting_angle, target):
-    group = draw.Group()
+def svg_arc(dwg_path, center, r, startDeg, endDeg, cw=False, firstArc=False):
+    # largeArc = (endDeg - startDeg) % 360 > 180
+    largeArc = False
+    startRad, endRad = startDeg*math.pi/180, endDeg*math.pi/180
+    sx, sy = r*math.cos(startRad), r*math.sin(startRad)
+    ex, ey = r*math.cos(endRad), r*math.sin(endRad)
+    dwg_path.push('M' if firstArc else 'L', center[0]+sx, center[1]+sy)
+    dwg_path.push('A', r, r, 0)
+    dwg_path.push('1' if largeArc else '0', '0' if largeArc ^ cw else '1')
+    dwg_path.push(center[0]+ex, center[1]+ey)
+
+
+def draw_shaft_encoder(dwg, center, encoder_starting_angle, target):
+    group = dwg.g()
     outer_radius = SHAFT_ENCODER['diameter']/2
     band_width = SHAFT_ENCODER['band_width']
     inter_band_gap = SHAFT_ENCODER['band_gap']
@@ -109,9 +114,9 @@ def draw_shaft_encoder(center, encoder_starting_angle, target):
     bit_angle = 360.0 / len(all_gray_codes)
     sensor_positions = []
     if target & TARGET_SHAFT_ENCODER_CUT or target & TARGET_SHAFT_ENCODER_MASK:
-        group.draw(draw.Circle(*center, SHAFT_ENCODER['diameter']/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='none'))
+        group.add(dwg.circle(center=(center[0], PAGE_SIZE[1]-center[1]), r=SHAFT_ENCODER['diameter']/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='none'))
     if target & TARGET_SHAFT_ENCODER_CUT or target & TARGET_SHAFT_ENCODER_MASK or target & TARGET_SENSORS_SUPPORT_CUT:
-        group.append(draw_shaft_hole(PAGE_CENTER))
+        group.add(draw_shaft_hole(dwg, PAGE_CENTER))
     for band_idx in range(NUM_BANDS):
         arcs = []
         bit_values = [code[NUM_BANDS-1-band_idx] == '1' for code in all_gray_codes]
@@ -136,7 +141,8 @@ def draw_shaft_encoder(center, encoder_starting_angle, target):
             last_bit_value = bit_value
         if target & TARGET_SHAFT_ENCODER_MASK:
             for arc_start, arc_end in arcs:
-                group.draw(draw_arc_cw(
+                group.add(draw_arc_cw(
+                    dwg,
                     center,
                     band_inner_radius,
                     band_outer_radius,
@@ -144,12 +150,12 @@ def draw_shaft_encoder(center, encoder_starting_angle, target):
                     arc_end))
         sensor_positions.append( (band_starting_position[0], band_starting_position[1], band_starting_angle) )
     for sensor_x, sensor_y, sensor_angle in sensor_positions:
-        group.append(draw_sensor(translate=(sensor_x, sensor_y), rotate_cw=sensor_angle, target=target))
+        group.add(draw_sensor(dwg, translate=(sensor_x, sensor_y), rotate_cw=sensor_angle, target=target))
     return group
 
 
-def draw_shaft_hole(center):
-    return draw.Circle(*center, SHAFT['diameter']/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='black')
+def draw_shaft_hole(dwg, center):
+    return dwg.circle(center=(center[0], PAGE_SIZE[1]-center[1]), r=SHAFT['diameter']/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='black')
 
 
 if __name__ == '__main__':
