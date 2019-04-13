@@ -13,7 +13,7 @@ class GPIOSensorsAdapter(object):
         self.previous_sensor_values = {}
 
     def read_all_sensor_values(self):
-        return dict((device, ''.join([self._read_sensor(sensor_pin) for sensor_pin in sensor_pins])) for device, sensor_pins in self.sensor_pins.items())
+        return dict((device, [self._read_sensor(sensor_pin) for sensor_pin in sensor_pins]) for device, sensor_pins in self.sensor_pins.items())
 
     def start(self):
         GPIO.setmode(GPIO.BCM)

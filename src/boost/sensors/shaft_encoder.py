@@ -28,7 +28,7 @@ class ShaftEncoders(object):
         self._on_device_angle_changed(device, self._code_to_angle(self.current_values[device]))
 
     def _code_to_angle(self, code):
-        value = self.gray_code_to_integer_map[code]
+        value = self.gray_code_to_integer_map[''.join(code)]
         return 360.0 / self.num_codes * value
 
 
