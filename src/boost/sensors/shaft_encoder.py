@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     def callback(device, angle):
         print('Device {0} {1}'.format(device, angle))
-    shaft_encoders = ShaftEncoders(2, {'A': [9, 11]}, 20, callback)
+    shaft_encoders = ShaftEncoders(2, {'A': [9, 11]}, 5, callback)
     current_values = shaft_encoders.start()
     for _device, _angle in current_values.items():
         print('Current value, {0}: {1}'.format(_device, _angle))
