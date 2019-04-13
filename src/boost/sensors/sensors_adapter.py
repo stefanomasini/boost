@@ -13,7 +13,7 @@ class GPIOSensorsAdapter(object):
         self.previous_sensor_values = {}
 
     def read_all_sensor_values(self):
-        return dict((device, ''.join([str(GPIO.input(sensor_pin)) for sensor_pin in sensor_pins])) for device, sensor_pins in self.sensor_pins.items())
+        return dict((device, ''.join([self._read_sensor(sensor_pin) for sensor_pin in sensor_pins])) for device, sensor_pins in self.sensor_pins.items())
 
     def start(self):
         GPIO.setmode(GPIO.BCM)
@@ -25,19 +25,23 @@ class GPIOSensorsAdapter(object):
         GPIO.cleanup()
 
     def _on_edge(self, sensor_pin):
-        current_value = str(GPIO.input(sensor_pin))
+        current_value = self._read_sensor(sensor_pin)
         if current_value != self.previous_sensor_values:
             self.on_edge_callback(*self.sensors_mapping[sensor_pin], current_value)
         self.previous_sensor_values = [current_value]
+
+    def _read_sensor(self, sensor_pin):
+        # The sensor returns a low value (0) for black, and a high value (1) for white, but we want viceversa
+        return str(1-GPIO.input(sensor_pin))
 
 
 if __name__ == '__main__':
     from time import sleep
     def callback(device, sensor_idx, value):
         print('Sensor {0} {1} {2}'.format(device, sensor_idx, value))
-    adapter = GPIOSensorsAdapter({'A': [11, 9]}, 20, callback)
+    adapter = GPIOSensorsAdapter({'A': [9, 11]}, 20, callback)
     adapter.start()
-    for _device, _value in adapter.read_all_sensor_values():
+    for _device, _value in adapter.read_all_sensor_values().items():
         print('Current value, {0}: {1}'.format(_device, _value))
     try:
         while True:
