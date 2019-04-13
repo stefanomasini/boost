@@ -12,14 +12,14 @@ def main():
     GPIO.setup(right_sensor, GPIO.IN)
 
     def my_callback(channel):
-        print("falling edge detected on left")
+        print("edge detected on left", channel)
 
-    def my_callback2(channel):
-        print("rising edge detected on left")
+    # def my_callback2(channel):
+    #     print("rising edge detected on left")
 
-    GPIO.add_event_detect(left_sensor, GPIO.FALLING, callback=my_callback, bouncetime=300)
+    GPIO.add_event_detect(left_sensor, GPIO.BOTH, callback=my_callback, bouncetime=300)
 
-    GPIO.add_event_detect(left_sensor, GPIO.RISING, callback=my_callback2, bouncetime=300)
+    # GPIO.add_event_detect(left_sensor, GPIO.RISING, callback=my_callback2, bouncetime=300)
 
     try:
         while True:
