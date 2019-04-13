@@ -26,7 +26,7 @@ class GPIOSensorsAdapter(object):
 
     def _on_edge(self, sensor_pin):
         current_value = self._read_sensor(sensor_pin)
-        if current_value != self.previous_sensor_values[sensor_pin]:
+        if current_value != self.previous_sensor_values.get(sensor_pin, None):
             self.on_edge_callback(*self.sensors_mapping[sensor_pin], current_value)
         self.previous_sensor_values[sensor_pin] = current_value
 
