@@ -26,9 +26,9 @@ class GPIOSensorsAdapter(object):
 
     def _on_edge(self, sensor_pin):
         current_value = self._read_sensor(sensor_pin)
-        if current_value != self.previous_sensor_values:
+        if current_value != self.previous_sensor_values[sensor_pin]:
             self.on_edge_callback(*self.sensors_mapping[sensor_pin], current_value)
-        self.previous_sensor_values = [current_value]
+        self.previous_sensor_values[sensor_pin] = current_value
 
     def _read_sensor(self, sensor_pin):
         # The sensor returns a high value (1) for black, and a low value (0) for white, which is what we want
