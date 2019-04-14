@@ -1,0 +1,5 @@
+---
+- name: Install Node.js
+  apt: pkg=nodejs
+  become: yes
+

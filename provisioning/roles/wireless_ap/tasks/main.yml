@@ -1,0 +1,113 @@
+---
+
+# From https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+
+- name: Install DHCP server
+  apt: pkg=dnsmasq
+  become: yes
+
+- name: Install access point host software
+  apt: pkg=hostapd
+  become: yes
+
+- name: Setting the WiFi country
+  lineinfile: dest=/etc/wpa_supplicant/wpa_supplicant.conf regexp="country" line="country={{ wifi_country }}"
+  become: yes
+
+- name: Configuring the WiFi static IP
+  become: yes
+  blockinfile:
+    dest: /etc/dhcpcd.conf
+    block: |
+      interface wlan0
+          static ip_address={{ wifi_ip_net }}.1/24
+          nohook wpa_supplicant
+    backup: yes
+
+- name: Configuring the DHCP server (dnsmasq)
+  become: yes
+  blockinfile:
+    dest: /etc/dnsmasq.conf
+    block: |
+      interface=wlan0
+      dhcp-range={{ wifi_ip_net }}.2,{{ wifi_ip_net }}.20,255.255.255.0,24h
+    backup: yes
+
+- name: Configuring the access point host software (hostapd)
+  become: yes
+  blockinfile:
+    dest: /etc/hostapd/hostapd.conf
+    create: yes
+    block: |
+      interface=wlan0
+      driver=nl80211
+      ssid={{ wifi_ssid }}
+      hw_mode=g
+      channel=7
+      wmm_enabled=0
+      macaddr_acl=0
+      auth_algs=1
+      ignore_broadcast_ssid=0
+      wpa=2
+      wpa_passphrase={{ wifi_password }}
+      wpa_key_mgmt=WPA-PSK
+      wpa_pairwise=TKIP
+      rsn_pairwise=CCMP
+    backup: yes
+
+- name: Configure WiFi daemon conf
+  become: yes
+  lineinfile:
+    dest: /etc/default/hostapd
+    regexp: "DAEMON_CONF"
+    line: 'DAEMON_CONF="/etc/hostapd/hostapd.conf"'
+
+- name: Start hostapd daemon
+  systemd:
+    name: hostapd
+    state: started
+    masked: no
+    enabled: yes
+
+- name: Start dnsmasq daemon
+  systemd:
+    name: dnsmasq
+    state: started
+    masked: no
+    enabled: yes
+
+- name: Create Iptables NAT chain
+  become: yes
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: 'eth0'
+    jump: MASQUERADE
+    comment: Ansible NAT Masquerade
+
+- name: Enable IPv4 forwarding
+  become: yes
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+    reload: True
+
+- name: Dump the iptables rule
+  become: yes
+  command: "iptables-save"
+  register: iptables_save
+
+- name: Write the iptables dump to a file
+  become: yes
+  copy:
+    content: "{{ iptables_save.stdout }}"
+    dest: /etc/iptables.ipv4.nat
+
+- name: Configure iptables from rc.local
+  become: yes
+  lineinfile:
+    dest: /etc/rc.local
+    insertbefore: "exit 0"
+    line: 'iptables-restore < /etc/iptables.ipv4.nat'
+    backup: yes

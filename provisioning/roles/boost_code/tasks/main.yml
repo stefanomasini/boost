@@ -1,0 +1,16 @@
+---
+
+- name: Checkout Boost code
+  git:
+    repo: 'https://github.com/stefanomasini/boost.git'
+    dest: /home/pi/boost
+
+- name: Install Python dependencies
+  command: pipenv install --skip-lock
+  args:
+    chdir: /home/pi/boost
+
+#- name: Creates bin directory
+#  file:
+#    path: /home/pi/bin
+#    state: directory

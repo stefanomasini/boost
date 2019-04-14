@@ -1,0 +1,28 @@
+- name: provision
+  remote_user: pi
+  hosts: all
+  vars:
+    - hostname: "boost"
+    - timezone: "Europe/Amsterdam"
+    - locale: "en_US.UTF-8"
+    - wifi_country: "NL"
+    - wifi_ip_net: "192.168.88"  # .1 is the server, the rest is DHCP
+    - wifi_ssid: "Boost WiFi"
+    - wifi_password: !vault |
+        $ANSIBLE_VAULT;1.1;AES256
+        31616165616232373665383162393135363463626637373662633838326537356433346338393262
+        6130656661363934656362623236303030393265626662350a643631646336366337333234343265
+        31376564306461383132653832333339343530353961393533343738626638633635323933613531
+        6631393432663761610a653431383662323262633662613533666363643666353134366364353236
+        3832
+  roles:
+    - hostname
+    - timezone
+    - hosts
+    - shell
+    - node
+    - { role: leesoh.pipenv }
+    - python
+    - git
+    - boost_code
+    - wireless_ap

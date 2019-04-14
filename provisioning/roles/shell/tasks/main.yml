@@ -1,0 +1,14 @@
+---
+- name: Shell configuration script
+  template: src=files/boost-bashrc.j2 dest=~/.boost-bashrc
+
+- name: Shell configuration script link in .bashrc
+  lineinfile: dest=~/.bashrc regexp="boost-bashrc" line=". .boost-bashrc"
+
+- name: Shell configuration script for root
+  template: src=files/boost-bashrc-root.j2 dest=/root/.boost-bashrc
+  become: yes
+
+- name: Shell configuration script link in .bashrc for root
+  lineinfile: dest=/root/.bashrc regexp="boost-bashrc" line=". .boost-bashrc"
+  become: yes

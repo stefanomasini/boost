@@ -1,0 +1,23 @@
+---
+- name: Install RPi.GPIO
+  apt: pkg=python3-rpi.gpio
+  become: yes
+
+#- name: Download Pip installer
+#  get_url:
+#    url: https://bootstrap.pypa.io/get-pip.py
+#    dest: /tmp/get-pip.py
+#
+#- name: Executable bit on Pip installer
+#  file: dest=/tmp/get-pip.py mode=a+x
+#  become: yes
+#
+#- name: Install Pip
+#  command: /tmp/get-pip.py
+#  become: yes
+#
+#- name: Install Pipenv
+#  command: pip install pipenv
+#  become: yes
+
+
