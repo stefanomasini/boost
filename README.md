@@ -1,23 +1,31 @@
 # boost
 Rotating bust
 
-## Install dependencies
+## Software
 
-    pipenv install
+### Pre-requisites
 
-## Run tests
+- Python 3.5
+    - Use PyEnv to set up the specific python version: 
+        - `pyenv local 3.5.7`
+        - `pyenv shell`
+- NodeJS
+- Yarn
+
+### Install dependencies
+
+    pipenv install (or maybe pipenv install --skip-lock)
+    cd frontend
+    yarn
+
+### Run tests
 
     pipenv run python run-tests.py
 
 
-## Raspberry PI
+## Provisioning the RaspberryPI
 
-Raspbian Stretch Lite
-  - Version: April 2019
-  - Release date: 2019-04-08
-  - Kernel version: 4.14
-  - [Image download page](https://www.raspberrypi.org/downloads/raspbian/)
-  - [Installation instructions](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md)
+See [Provisioning](./provisioning/README.md)
 
 
 ## Shaft encoder
@@ -33,3 +41,9 @@ It will generate SVG files inside `shaft_encoder`:
  - `sensors_cut`: Used to laser-cut holes for the reflective sensors
  - `sensors_engrave`: Used to engrave the shape of the sensors on the sensors support
  - `all`: Used to print as a reference
+
+
+## Reference
+
+ - https://pinout.xyz/pinout/ground
+ 

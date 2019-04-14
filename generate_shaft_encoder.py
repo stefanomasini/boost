@@ -1,3 +1,8 @@
+# Generate shaft encoder
+# - Gray encoding
+# - MSB (Most Significant Bit) on the innermost circular band, LSB (Least Significant Bit) on the outermost
+# - 0 = White, 1 = Black
+
 import os
 import sys
 import math
