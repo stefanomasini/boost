@@ -3,3 +3,24 @@
   apt: pkg=nodejs
   become: yes
 
+- name: Install Npm
+  apt: pkg=npm
+  become: yes
+
+- name: Add an Apt key for Yarn
+  become: yes
+  apt_key:
+    url: https://dl.yarnpkg.com/debian/pubkey.gpg
+    state: present
+
+- name: Add Yarn to apt sources.list
+  become: yes
+  copy:
+    content: "deb https://dl.yarnpkg.com/debian/ stable main"
+    dest: /etc/apt/sources.list.d/yarn.list
+
+- name: Install Yarn
+  become: yes
+  apt:
+    pkg: yarn
+    update_cache: yes

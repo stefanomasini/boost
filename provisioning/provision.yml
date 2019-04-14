@@ -16,13 +16,13 @@
         6631393432663761610a653431383662323262633662613533666363643666353134366364353236
         3832
   roles:
-    - hostname
-    - timezone
-    - hosts
-    - shell
+#    - hostname
+#    - timezone
+#    - hosts
+#    - shell
     - node
-    - { role: leesoh.pipenv }
-    - python
-    - git
-    - boost_code
-    - wireless_ap
+#    - { role: leesoh.pipenv }
+#    - python
+#    - git
+#    - boost_code
+#    - wireless_ap
