@@ -44,3 +44,13 @@ class ThunderBorgAdapter(object):
             self.TB.SetMotor1(speed)
         if motor == 'B':
             self.TB.SetMotor2(speed)
+
+
+if __name__ == '__main__':
+    adapter = ThunderBorgAdapter(print)
+
+    # ThunderBorg.ScanForThunderBorg(busNumber=1)
+
+    adapter.initialize()
+    print('is_faulty', adapter.is_faulty())
+    print('get_voltage_reading', adapter.get_voltage_reading())

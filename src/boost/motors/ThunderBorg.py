@@ -24,12 +24,9 @@ import ThunderBorg
 TB = ThunderBorg.ThunderBorg()
 TB.Help()
 See the website at www.piborg.org/thunderborg for more details
+
+Downloaded from: http://forum.piborg.org/downloads/thunderborg/ThunderBorg3.py.txt
 """
-
-# -------------------------
-# Converted using 2to3
-# -------------------------
-
 
 # Import the libraries we need
 import io
@@ -219,9 +216,9 @@ Command codes can be found at the top of ThunderBorg.py, data is a list of 0 or 
 
 Under most circumstances you should use the appropriate function instead of RawWrite
         """
-        rawOutput = chr(command)
-        for singleByte in data:
-            rawOutput += chr(singleByte)
+        rawOutput = [command]
+        rawOutput.extend(data)
+        rawOutput = bytes(rawOutput)
         self.i2cWrite.write(rawOutput)
 
 
@@ -242,7 +239,7 @@ Under most circumstances you should use the appropriate function instead of RawR
             rawReply = self.i2cRead.read(length)
             reply = []
             for singleByte in rawReply:
-                reply.append(ord(singleByte))
+                reply.append(singleByte)
             if command == reply[0]:
                 break
             else:
@@ -272,7 +269,7 @@ This call does not check the board is present or working, under most circumstanc
         """
 Print(message)
 
-Wrapper used by the ThunderBorg instance to print messages, will call printFunction if set, print otherwise
+Wrapper used by the ThunderBorg instance to print(messages, will call printFunction if set, print otherwise)
         """
         if self.printFunction == None:
             print(message)
@@ -904,10 +901,9 @@ Help()
 Displays the names and descriptions of the various functions and settings provided
         """
         funcList = [ThunderBorg.__dict__.get(a) for a in dir(ThunderBorg) if isinstance(ThunderBorg.__dict__.get(a), types.FunctionType)]
-        funcListSorted = sorted(funcList, key = lambda x: x.__code__.co_firstlineno)
+        funcListSorted = sorted(funcList, key = lambda x: x.func_code.co_firstlineno)
 
         print(self.__doc__)
-        print()
+        print
         for func in funcListSorted:
-            print('=== %s === %s' % (func.__name__, func.__doc__))
-
+            print('=== %s === %s' % (func.func_name, func.func_doc))
