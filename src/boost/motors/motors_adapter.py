@@ -45,12 +45,23 @@ class ThunderBorgAdapter(object):
         if motor == 'B':
             self.TB.SetMotor2(speed)
 
+    def stop(self):
+        self.TB.MotorsOff()
+
 
 if __name__ == '__main__':
-    adapter = ThunderBorgAdapter(print)
+    def main():
+        import time
+        adapter = ThunderBorgAdapter(print)
 
-    # ThunderBorg.ScanForThunderBorg(busNumber=1)
+        # ThunderBorg.ScanForThunderBorg(busNumber=1)
 
-    adapter.initialize()
-    print('is_faulty', adapter.is_faulty())
-    print('get_voltage_reading', adapter.get_voltage_reading())
+        adapter.initialize()
+        print('is_faulty', adapter.is_faulty())
+        print('get_voltage_reading', adapter.get_voltage_reading())
+        num_steps = 20
+        for i in range(num_steps):
+            adapter.set_motor_speed('A', i * 1.0 / num_steps)
+            time.sleep(0.1)
+        adapter.stop()
+    main()
