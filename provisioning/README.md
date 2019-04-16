@@ -27,6 +27,13 @@ Raspbian Stretch Lite
        mkdir .ssh
        chmod 700 .ssh
        curl -o .ssh/authorized_keys https://github.com/stefanomasini.keys
+       
+ - Activate I2C
+ 
+   - `sudo raspi-config`
+   - `5 Interfacing Options`
+   - `P5 I2C`
+   - `Would you like the ARM I2C interface to be enabled?` -> `Yes`
 
  - Update Raspbian:
  
