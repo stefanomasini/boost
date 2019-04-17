@@ -3,24 +3,7 @@ Rotating bust
 
 ## Software
 
-### Pre-requisites
-
-- Python 3.5
-    - Use PyEnv to set up the specific python version: 
-        - `pyenv local 3.5.7`
-        - `pyenv shell`
-- NodeJS
-- Yarn
-
-### Install dependencies
-
-    pipenv install (or maybe pipenv install --skip-lock)
-    cd frontend
-    yarn
-
-### Run tests
-
-    pipenv run python run-tests.py
+See [Development](./src/README.md)
 
 
 ## Provisioning the RaspberryPI
@@ -41,6 +24,10 @@ It will generate SVG files inside `shaft_encoder`:
  - `sensors_cut`: Used to laser-cut holes for the reflective sensors
  - `sensors_engrave`: Used to engrave the shape of the sensors on the sensors support
  - `all`: Used to print as a reference
+ 
+### Test sensors
+
+    pipenv run python -m boost.sensors.sensors_adapter
 
 
 ## Reference
