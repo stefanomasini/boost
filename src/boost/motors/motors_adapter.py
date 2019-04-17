@@ -38,12 +38,12 @@ class ThunderBorgAdapter(object):
     def get_voltage_reading(self):
         return self.TB.GetBatteryReading()
 
-    def set_motor_speed(self, motor, speed):
+    def set_motor_power(self, motor, power):
         assert motor in ('A', 'B'), 'Unknown motor {0}'.format(motor)
         if motor == 'A':
-            self.TB.SetMotor1(speed)
+            self.TB.SetMotor1(power)
         if motor == 'B':
-            self.TB.SetMotor2(speed)
+            self.TB.SetMotor2(power)
 
     def stop(self):
         self.TB.MotorsOff()
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         print('get_voltage_reading', adapter.get_voltage_reading())
         num_steps = 20
         for i in range(num_steps):
-            adapter.set_motor_speed('A', i * 1.0 / num_steps)
+            adapter.set_motor_power('A', i * 1.0 / num_steps)
             time.sleep(0.1)
         adapter.stop()
     main()
