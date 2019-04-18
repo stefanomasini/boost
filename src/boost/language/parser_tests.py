@@ -65,6 +65,26 @@ test(B)
 """
 
 
+FUNCTION_AT_BOTTOM = """
+# Start at second 2
+0:02
+right(A, to=12, speed=1)
+
+# Wait 3 seconds
++0:03
+left(A, to=1, speed=3)
+
+# Wait 5 seconds
++0:05
+say_no(A)
+
+# This is a function
+def say_no(X):
+    right(X, to=5, speed=3)
+    right(X, to=1, speed=3)
+"""
+
+
 class ParserTestSuite(unittest.TestCase):
     def setUp(self):
         self.local_variables = ('A', 'B')
@@ -179,3 +199,10 @@ class ParserTestSuite(unittest.TestCase):
                 CommandTurn(direction='left', target='X', to=1, speed=2)
             ])
         })
+
+    def test_parse_function_at_bottom(self):
+        errors = []
+        parse_program(FUNCTION_AT_BOTTOM, self.local_variables, errors)
+        self.assertEqual(errors, [])
+
+# Also test multiple function blocks

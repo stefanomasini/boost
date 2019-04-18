@@ -69,6 +69,8 @@ def run_application(config):
     symbols = {'A': Motor('A', planner), 'B': Motor('B', planner)}
     errors = []
     program = parse_program(program_code, symbols.keys(), errors)
+    for error in errors:
+        print(error)
     assert len(errors) == 0, 'Errors in program!'
     execution_context = ExecutionContext(program, clock, symbols, lambda m: print('RUNTIME ERROR', m.message))
 
