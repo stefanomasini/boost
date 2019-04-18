@@ -2,20 +2,14 @@ from datetime import timedelta
 
 
 class MotorsController(object):
-    def __init__(self, clock, motor_names, power_definitions, ramp_up_time_in_sec):
+    def __init__(self, clock, motor_names):
         self.clock = clock
         self.current_power = dict((motor_name, 0) for motor_name in motor_names)
-        self.speed_to_power_map = dict((idx+1, power_value) for idx, power_value in enumerate(power_definitions))
-        maximum_power_value = power_definitions[-1]
-        self.power_ramp_up_per_sec = maximum_power_value / ramp_up_time_in_sec
         self.ramp_up = dict((motor_name, None) for motor_name in motor_names)
 
-    def set_target_speed(self, motor_name, speed):
+    def set_target_speed(self, motor_name, speed, constants):
         assert motor_name in self.current_power, 'Invalid motor {0}'.format(motor_name)
-        assert speed in self.speed_to_power_map or -speed in self.speed_to_power_map, 'Invalid speed {0}'.format(speed)
-        target_ramp_up_power = self.speed_to_power_map[speed] if speed > 0 else -self.speed_to_power_map[-speed]
-        ramp_up = RampUp.calculate(self.current_power[motor_name], target_ramp_up_power, self.clock.now(), self.power_ramp_up_per_sec)
-        self.ramp_up[motor_name] = ramp_up
+        self.ramp_up[motor_name] = constants.get_ramp_up(self.current_power[motor_name], speed, self.clock.now())
 
     def stop_motor_immediately(self, motor_name):
         assert motor_name in self.current_power, 'Invalid motor {0}'.format(motor_name)
@@ -29,6 +23,21 @@ class MotorsController(object):
                 self.current_power[motor_name] = power
         for motor_name, power in self.current_power.items():
             adapter.set_motor_power(motor_name, power)
+
+
+class MotorControllerConstants(object):
+    def __init__(self, power_definitions, ramp_up_time_from_zero_to_max_in_sec):
+        self.speed_to_power_map = dict((idx+1, power_value) for idx, power_value in enumerate(power_definitions))
+        maximum_power_value = power_definitions[-1]
+        self.power_ramp_up_per_sec = maximum_power_value / ramp_up_time_from_zero_to_max_in_sec
+
+    def _get_power_from_speed(self, speed):
+        assert speed in self.speed_to_power_map or -speed in self.speed_to_power_map, 'Invalid speed {0}'.format(speed)
+        return self.speed_to_power_map[speed] if speed > 0 else -self.speed_to_power_map[-speed]
+
+    def get_ramp_up(self, current_power, speed, now):
+        target_ramp_up_power = self._get_power_from_speed(speed)
+        return RampUp.calculate(current_power, target_ramp_up_power, now, self.power_ramp_up_per_sec)
 
 
 class RampUp(object):
