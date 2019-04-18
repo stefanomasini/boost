@@ -76,3 +76,6 @@ class Storage(object):
 
     def get_motors_constants(self):
         return MotorControllerConstants([0.2, 0.4, 0.6, 0.8, 1.0], 0.5)
+
+    def get_current_program(self):
+        return self.data['programs']['all_programs'][self.data['programs']['current_program_id']]

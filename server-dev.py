@@ -19,6 +19,9 @@ class CONFIG(object):
     # Motors
     motors_apply_power_every_ms = 50  # Max 250, otherwise the ThunderBorg protection mechanism will kick in and stop the motors
 
+    # Program
+    step_program_every_ms = 50  # This is effectively the resolution of the timer in the program
+
 
 if __name__ == '__main__':
     src_dirpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'src')

@@ -6,6 +6,8 @@ from .motors.motors_controller import MotorsController
 from .motors.motors_adapter import ThunderBorgAdapter
 from .planner import Planner
 from .clock import Clock
+from .language.parser import parse_program
+from .executor import ExecutionContext, WarningRuntimeMessage
 import asyncio
 
 
@@ -27,6 +29,15 @@ class HttpServerInputMessageQueue(object):
         To be called only from the main asyncio-based thread.
         """
         return await self.msg_queue.get()
+
+
+class Motor(object):
+    def __init__(self, device, planner):
+        self.device = device
+        self.planner = planner
+
+    def turn(self, direction, to, speed):
+        self.planner.set_plan(self.device, to, speed, 'cw' if direction == 'left' else 'ccw')
 
 
 def run_application(config):
@@ -54,6 +65,19 @@ def run_application(config):
             motors_controller.apply_motor_power(motors_adapter)
             await asyncio.sleep(config.motors_apply_power_every_ms / 1000.0)
 
+    program_code = storage.get_current_program()['code']
+    symbols = {'A': Motor('A', planner), 'B': Motor('B', planner)}
+    errors = []
+    program = parse_program(program_code, symbols.keys(), errors)
+    assert len(errors) == 0, 'Errors in program!'
+    execution_context = ExecutionContext(program, clock, symbols, lambda m: print('RUNTIME ERROR', m.message))
+
+    async def execute_program_task():
+        while True:
+            if execution_context and not execution_context.terminated:
+                execution_context.execute_if_scheduled()
+            await asyncio.sleep(config.step_program_every_ms / 1000.0)
+
     def stop_everything():
         motors_adapter.stop()
         shaft_encoder.stop()
@@ -79,6 +103,7 @@ def run_application(config):
         await asyncio.wait([
             http_app_task,
             asyncio.create_task(apply_motor_power_task()),
+            asyncio.create_task(execute_program_task()),
             # asyncio.create_task(test_producer()),
         ], return_when=asyncio.FIRST_COMPLETED)
 
