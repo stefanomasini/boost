@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
-from .motors_controller import MotorsController, MotorControllerConstants
+from .motors_controller import MotorsController
+from ..constants import MotorControllerConstants
 
 
 class FakeClock(object):

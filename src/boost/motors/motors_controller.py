@@ -14,7 +14,7 @@ class MotorsController(object):
 
     def set_target_speed(self, motor_name, speed, constants):
         assert motor_name in self.current_power, 'Invalid motor {0}'.format(motor_name)
-        self.ramp_up[motor_name] = constants.get_ramp_up(self.current_power[motor_name], speed, self.clock.now())
+        self.ramp_up[motor_name] = _get_ramp_up(constants, self.current_power[motor_name], speed, self.clock.now())
 
     def stop_motor_immediately(self, motor_name):
         assert motor_name in self.current_power, 'Invalid motor {0}'.format(motor_name)
@@ -31,19 +31,17 @@ class MotorsController(object):
             adapter.set_motor_power(motor_name, power)
 
 
-class MotorControllerConstants(object):
-    def __init__(self, power_definitions, ramp_up_time_from_zero_to_max_in_sec):
-        self.speed_to_power_map = dict((idx+1, power_value) for idx, power_value in enumerate(power_definitions))
-        maximum_power_value = power_definitions[-1]
-        self.power_ramp_up_per_sec = maximum_power_value / ramp_up_time_from_zero_to_max_in_sec
+def _get_power_from_speed(constants, speed):
+    speed_to_power_map = dict((idx+1, power_value) for idx, power_value in enumerate(constants.power_definitions))
+    assert speed in speed_to_power_map or -speed in speed_to_power_map, 'Invalid speed {0}'.format(speed)
+    return speed_to_power_map[speed] if speed > 0 else -speed_to_power_map[-speed]
 
-    def _get_power_from_speed(self, speed):
-        assert speed in self.speed_to_power_map or -speed in self.speed_to_power_map, 'Invalid speed {0}'.format(speed)
-        return self.speed_to_power_map[speed] if speed > 0 else -self.speed_to_power_map[-speed]
 
-    def get_ramp_up(self, current_power, speed, now):
-        target_ramp_up_power = self._get_power_from_speed(speed)
-        return RampUp.calculate(current_power, target_ramp_up_power, now, self.power_ramp_up_per_sec)
+def _get_ramp_up(constants, current_power, speed, now):
+    maximum_power_value = constants.power_definitions[-1]
+    power_ramp_up_per_sec = maximum_power_value / constants.ramp_up_time_from_zero_to_max_in_sec
+    target_ramp_up_power = _get_power_from_speed(constants, speed)
+    return RampUp.calculate(current_power, target_ramp_up_power, now, power_ramp_up_per_sec)
 
 
 class RampUp(object):

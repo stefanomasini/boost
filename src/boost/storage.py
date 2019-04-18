@@ -1,5 +1,6 @@
 import os
 import json
+from .constants import MotorControllerConstants
 
 SAMPLE_PROGRAM_FILEPATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'language', 'sample_program.txt')
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'data'))
@@ -72,3 +73,6 @@ class Storage(object):
     def set_programs(self, programs):
         self.data['programs'] = programs
         self._save_programs()
+
+    def get_motors_constants(self):
+        return MotorControllerConstants([0.2, 0.4, 0.6, 0.8, 1.0], 0.5)

@@ -3,17 +3,17 @@ class Planner(object):
         self.shaft_encoder = shaft_encoder
         self.motors_controller = motors_controller
         self.current_target_position = {}
-        self.constants = None
+        self.motors_constants = None
 
-    def set_constants(self, constants):
-        self.constants = constants
+    def set_constants(self, motors_constants):
+        self.motors_constants = motors_constants
 
     def on_shaft_position(self, positions, speeds):
         for device, position in positions.items():
             target_position = self.current_target_position.get(device, None)
             if target_position:
                 if position.position == target_position:
-                    self.motors_controller.set_target_speed(device, 0, self.constants)
+                    self.motors_controller.set_target_speed(device, 0, self.motors_constants)
 
     def set_plan(self, device, target_position, speed, direction):
         assert device in self.shaft_encoder.devices, 'Invalid device {0}'.format(device)
@@ -27,4 +27,4 @@ class Planner(object):
 
         self.current_target_position[device] = target_position
         if self.shaft_encoder.get_current_position(device).position != target_position:
-            self.motors_controller.set_target_speed(device, speed, self.constants)
+            self.motors_controller.set_target_speed(device, speed, self.motors_constants)

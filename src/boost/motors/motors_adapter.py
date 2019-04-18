@@ -25,6 +25,7 @@ class ThunderBorgAdapter(object):
             # Enable the communications failsafe
             # The failsafe will turn the motors off unless it is commanded at least once every 1/4 of a second
             self.TB.SetCommsFailsafe(True)
+        return True
 
     def is_faulty(self):
         faulty_1 = self.TB.GetDriveFault1()
