@@ -16,6 +16,7 @@ class MotorsController(object):
         self.current_power[motor_name] = 0
         self.ramp_up[motor_name] = None
 
+    # To be called periodically to drive the motors adapter
     def apply_motor_power(self, adapter):
         for motor_name, ramp_up in self.ramp_up.items():
             if ramp_up:
