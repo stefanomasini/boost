@@ -21,7 +21,7 @@ TARGET_SENSORS_SUPPORT_ENGRAVE  = 8
 TARGET_ALL                      = 1 + 2 + 4 + 8
 
 
-PAGE_SIZE = [210.0, 297.0]
+PAGE_SIZE = [350.0, 420.0]  # larger than A3, but printable on A3
 
 PAGE_CENTER = (PAGE_SIZE[0]/2, PAGE_SIZE[1]/2)
 
@@ -32,20 +32,29 @@ SENSOR = {
 }
 
 SHAFT = {
-    'diameter': 10.0,
+    'diameter': 70.0,
 }
 
 SHAFT_ENCODER = {
-    'diameter': 180.0,
-    'band_width': 14.0,
+    # 'diameter': 180.0,
+    'inner_diameter': 80.0,
+    'band_width': 16.0,
     'band_gap': 0.0,
-    'band_angle_displacement': 20,
+    'band_angle_displacement': 0.0,
+}
+
+SENSORS_CUTTING_PROFILE = {
+    'height': 33.0,
+    'abbundance': 4.0,
+    'external_abbundance': 10.0,
+    'internal_abbundance': -50.0,
+    'top_abbundance': -30.0,
 }
 
 # For printing only, not cutting
 MARKING_STROKE_WIDTH = 0.1
 
-NUM_BANDS = 5
+NUM_BANDS = 6
 all_gray_codes = generate_gray_codes(NUM_BANDS)
 
 
@@ -112,16 +121,25 @@ def svg_arc(dwg_path, center, r, startDeg, endDeg, cw=False, firstArc=False):
 
 def draw_shaft_encoder(dwg, center, encoder_starting_angle, target):
     group = dwg.g()
-    outer_radius = SHAFT_ENCODER['diameter']/2
     band_width = SHAFT_ENCODER['band_width']
+    if 'inner_diameter' in SHAFT_ENCODER:
+        outer_radius = SHAFT_ENCODER['inner_diameter']/2 + band_width * NUM_BANDS
+    else:
+        outer_radius = SHAFT_ENCODER['diameter']/2
     inter_band_gap = SHAFT_ENCODER['band_gap']
     band_angle_displacement = SHAFT_ENCODER['band_angle_displacement']
     bit_angle = 360.0 / len(all_gray_codes)
     sensor_positions = []
+
+    # The circular mask circumference
     if target & TARGET_SHAFT_ENCODER_CUT or target & TARGET_SHAFT_ENCODER_MASK:
-        group.add(dwg.circle(center=(center[0], PAGE_SIZE[1]-center[1]), r=SHAFT_ENCODER['diameter']/2, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='none'))
+        group.add(dwg.circle(center=(center[0], PAGE_SIZE[1]-center[1]), r=outer_radius, stroke='black', stroke_width=MARKING_STROKE_WIDTH, fill='none'))
+
+    # The shaft hole
     if target & TARGET_SHAFT_ENCODER_CUT or target & TARGET_SHAFT_ENCODER_MASK or target & TARGET_SENSORS_SUPPORT_CUT:
         group.add(draw_shaft_hole(dwg, PAGE_CENTER))
+
+    # The bands
     for band_idx in range(NUM_BANDS):
         arcs = []
         bit_values = [code[NUM_BANDS-1-band_idx] == '1' for code in all_gray_codes]
@@ -154,9 +172,26 @@ def draw_shaft_encoder(dwg, center, encoder_starting_angle, target):
                     arc_start,
                     arc_end))
         sensor_positions.append( (band_starting_position[0], band_starting_position[1], band_starting_angle) )
+
+    # The sensors
     for sensor_x, sensor_y, sensor_angle in sensor_positions:
         group.add(draw_sensor(dwg, translate=(sensor_x, sensor_y), rotate_cw=sensor_angle, target=target))
+
+    # The sensors cutting profile
+    if target & TARGET_SENSORS_SUPPORT_CUT:
+        group.add(draw_sensor_cutting_mask(dwg, outer_radius))
+
     return group
+
+
+def draw_sensor_cutting_mask(dwg, disk_radius):
+    g = dwg.g(transform='translate({0} {1})'.format(PAGE_SIZE[0]/2, PAGE_SIZE[1]/2))
+    shaft_radius = SHAFT['diameter']/2.0
+    g.add(dwg.rect((-shaft_radius - SENSORS_CUTTING_PROFILE['abbundance'] - SENSORS_CUTTING_PROFILE['internal_abbundance'], -shaft_radius - SENSORS_CUTTING_PROFILE['abbundance'] - SENSORS_CUTTING_PROFILE['top_abbundance']),
+                   (shaft_radius + SENSORS_CUTTING_PROFILE['abbundance']*2 + disk_radius + SENSORS_CUTTING_PROFILE['external_abbundance'] + SENSORS_CUTTING_PROFILE['internal_abbundance'],
+                    shaft_radius + SENSORS_CUTTING_PROFILE['abbundance']*2 + SENSORS_CUTTING_PROFILE['height'] + SENSORS_CUTTING_PROFILE['top_abbundance']),
+                    stroke_width=MARKING_STROKE_WIDTH, stroke='black', fill='none'))
+    return g
 
 
 def draw_shaft_hole(dwg, center):

@@ -15,7 +15,7 @@ See [Provisioning](./provisioning/README.md)
 
 Generate the png/svg files with:
 
-    pipenv run python generate_shaft_encoder
+    pipenv run python generate_shaft_encoder.py
     
 It will generate SVG files inside `shaft_encoder`:
 
