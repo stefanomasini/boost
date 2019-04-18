@@ -53,3 +53,12 @@ Raspbian Stretch Lite
  - Provision with:
  
        ./provision.sh <raspberry Pi IP address>
+
+
+## Remote connection via OpenVPN
+
+ - [Installed OpenVPN on the server](https://github.com/kylemanna/docker-openvpn)
+   - Extra parameters: `-c -d -D`
+   - Common name: `stefano`
+   - Changed vpn network cidr
+   - Added fixed IP assignment to clients following [these instructions](https://www.itsfullofstars.de/2018/09/openvpn-assign-static-ip-to-client/)
