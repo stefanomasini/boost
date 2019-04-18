@@ -37,6 +37,9 @@ class ShaftEncoders(object):
     def stop(self):
         self.sensors_adapter.stop()
 
+    def get_current_position(self, device):
+        return self.current_positions[device]
+
     def _on_sensor_values(self, values):
         positions = {}
         speeds = {}
@@ -94,7 +97,7 @@ if __name__ == '__main__':
 
         clock = Clock()
 
-        adapter = GPIOSensorsAdapter([11, 9, 10, 22, 27], 5)  # Missing LSB 17
+        adapter = GPIOSensorsAdapter([11, 9, 10, 22, 27, 17], 5)
 
         def print_values(positions, speeds=None):
             print('Positions: {0} Speeds: {1}'.format(positions, speeds))

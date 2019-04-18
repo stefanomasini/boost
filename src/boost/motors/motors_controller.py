@@ -1,6 +1,11 @@
 from datetime import timedelta
 
 
+# NOTE:
+#  - positive speed = Counter-Clockwise (CCW) rotation
+#  - negative speed = Clockwise (CW) rotation
+
+
 class MotorsController(object):
     def __init__(self, clock, motor_names):
         self.clock = clock
