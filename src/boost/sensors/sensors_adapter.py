@@ -45,7 +45,7 @@ class GPIOSensorsAdapter(object):
 if __name__ == '__main__':
     def print_values(sensor_values):
         print('Sensors: {0}'.format(''.join([('.' if v == '1' else 'O') for v in sensor_values])))
-    adapter = GPIOSensorsAdapter([11, 9, 10, 22, 27], 5)
+    adapter = GPIOSensorsAdapter([11, 9, 10, 22, 27, 17, 14, 15, 18, 25, 8, 7], 5)
     initial_values = adapter.start(print_values)
     print_values(initial_values)
     try:
