@@ -156,3 +156,7 @@
       chdir: "{{ build_path }}/Python-{{ PYTHON }}"
   become: yes
   when: python_configure.changed
+
+
+# Compile and install RPi.GPIO
+#  https://files.pythonhosted.org/packages/af/2f/407b6e4cc8a0bdf434825a160bba1807991886b63cce16a5f1a6e1f24cdf/RPi.GPIO-0.6.5.tar.gz
