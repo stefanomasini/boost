@@ -62,7 +62,10 @@ if __name__ == '__main__':
         print('get_voltage_reading', adapter.get_voltage_reading())
         num_steps = 20
         for i in range(num_steps):
-            adapter.set_motor_power('A', i * 1.0 / num_steps)
+            adapter.set_motor_power('A', i * 0.8 / num_steps)
+            time.sleep(0.1)
+        for i in range(10000):
+            adapter.set_motor_power('A', 0.8)
             time.sleep(0.1)
         adapter.stop()
     main()

@@ -32,6 +32,8 @@ class MotorsController(object):
 
 
 def _get_power_from_speed(constants, speed):
+    if speed == 0:
+        return 0.0
     speed_to_power_map = dict((idx+1, power_value) for idx, power_value in enumerate(constants.power_definitions))
     assert speed in speed_to_power_map or -speed in speed_to_power_map, 'Invalid speed {0}'.format(speed)
     return speed_to_power_map[speed] if speed > 0 else -speed_to_power_map[-speed]
@@ -48,6 +50,8 @@ class RampUp(object):
     @classmethod
     def calculate(cls, start_power, target_power, start_time, power_ramp_up_per_sec):
         power_diff = abs(target_power - start_power)
+        if power_diff == 0:
+            return None
         ramp_up_time_in_sec = power_diff / power_ramp_up_per_sec
         target_time = start_time + timedelta(seconds=ramp_up_time_in_sec)
         return cls(start_power, target_power, start_time, target_time)
