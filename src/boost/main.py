@@ -41,7 +41,7 @@ class Motor(object):
 
 
 def build_hardare_adapters(config):
-    if getattr(config, 'mock_hardware'):
+    if getattr(config, 'mock_hardware', False):
         from .sensors.sensors_mock import MockSensorsAdapter
         from .motors.motors_mock import MockMotorsAdapter
         sensors_adapter = MockSensorsAdapter(config.sensor_pins)
