@@ -5,12 +5,65 @@
     repo: 'https://github.com/stefanomasini/boost.git'
     dest: /home/pi/boost
 
+- name: Create .env file
+  copy:
+    dest: /home/pi/boost/.env
+    content: 'PYTHONPATH=${PYTHONPATH}:src:/usr/local/lib/python3.7/site-packages'
+
 - name: Install Python dependencies
-  command: pipenv install --skip-lock
+  command: pipenv install
   args:
     chdir: /home/pi/boost
 
-#- name: Creates bin directory
-#  file:
-#    path: /home/pi/bin
-#    state: directory
+- name: install supervisor
+  become: yes
+  apt: name=supervisor state=present
+
+- name: create /var/log/boost directory
+  become: yes
+  file:
+    path: /var/log/boost
+    state: directory
+
+- name: frontend supervisord script
+  become: yes
+  copy:
+    dest: /etc/supervisor/conf.d/boost_frontend.conf
+    content: |
+      [program:boost_frontend]
+      command=yarn start
+      directory=/home/pi/boost/frontend
+      autostart=true
+      autorestart=true
+      startretries=3
+      stderr_logfile=/var/log/boost/frontend.err.log
+      stdout_logfile=/var/log/boost/frontend.out.log
+      user=pi
+
+- name: backend supervisord script
+  become: yes
+  copy:
+    dest: /etc/supervisor/conf.d/boost_server.conf
+    content: |
+      [program:boost_server]
+      command=pipenv run python server.py
+      directory=/home/pi/boost
+      autostart=true
+      autorestart=true
+      startretries=3
+      stderr_logfile=/var/log/boost/server.err.log
+      stdout_logfile=/var/log/boost/server.out.log
+      user=pi
+
+- name: Start supervisor daemon
+  become: yes
+  systemd:
+    name: supervisor.service
+    state: started
+    masked: no
+    enabled: yes
+
+# Might have to issue the following commands by hand:
+#  sudo systemctl daemon-reload
+#  sudo systemctl enable supervisord.service
+#  sudo systemctl start supervisord.service
