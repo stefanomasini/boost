@@ -40,6 +40,9 @@ class ShaftEncoders(object):
     def get_current_position(self, device):
         return self.current_positions[device]
 
+    def get_current_positions(self):
+        return self.current_positions
+
     def _on_sensor_values(self, values):
         positions = {}
         speeds = {}

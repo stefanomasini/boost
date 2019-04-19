@@ -13,13 +13,15 @@ class Storage(object):
     def __init__(self, application_defaults):
         self.application_defaults = application_defaults
         self.data = None
+        self._on_program_changed = None
 
-    def initialize(self):
+    def initialize(self, on_program_changed):
         if not os.path.exists(DATA_DIR):
             self.data = self._create_default_data()
             self._create_data_folder()
         else:
             self.data = self._read_data_folder()
+        self._on_program_changed = on_program_changed
 
     def _create_data_folder(self):
         os.makedirs(DATA_DIR)
@@ -71,8 +73,15 @@ class Storage(object):
         return self.data['programs']
 
     def set_programs(self, programs):
+        old_code = self.get_current_program()['code']
+        programs['all_programs'] = dict((int(program_id), program) for program_id, program in programs['all_programs'].items())
         self.data['programs'] = programs
         self._save_programs()
+        new_code = self.get_current_program()['code']
+        if new_code != old_code:
+            if not self._on_program_changed():
+                return False
+        return True
 
     def get_motors_constants(self):
         return MotorControllerConstants([0.2, 0.4, 0.6, 0.8, 1.0], 0.5)

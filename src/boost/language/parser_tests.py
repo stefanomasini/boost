@@ -85,6 +85,10 @@ def say_no(X):
 """
 
 
+FUNCTION_WITH_STOP = """
+"""
+
+
 class ParserTestSuite(unittest.TestCase):
     def setUp(self):
         self.local_variables = ('A', 'B')

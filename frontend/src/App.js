@@ -15,6 +15,8 @@ import Button from '@material-ui/core/Button';
 import MenuIcon from '@material-ui/icons/Menu';
 import ListIcon from '@material-ui/icons/List';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import ArrowRightAltIcon from '@material-ui/icons/ArrowRightAlt';
+import StopIcon from '@material-ui/icons/Stop';
 // import Fab from '@material-ui/core/Fab';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 // import NotificationsIcon from '@material-ui/icons/Notifications';
@@ -32,13 +34,14 @@ import MenuList from '@material-ui/core/MenuList';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import ListSubheader from '@material-ui/core/ListSubheader';
+// import ListSubheader from '@material-ui/core/ListSubheader';
 import DashboardIcon from '@material-ui/icons/Dashboard';
-import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
-import PeopleIcon from '@material-ui/icons/People';
+// import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+// import PeopleIcon from '@material-ui/icons/People';
 import BarChartIcon from '@material-ui/icons/BarChart';
 import LayersIcon from '@material-ui/icons/Layers';
-import AssignmentIcon from '@material-ui/icons/Assignment';
+// import AssignmentIcon from '@material-ui/icons/Assignment';
+import Slider from '@material-ui/lab/Slider';
 
 import { connect } from 'react-redux'
 
@@ -58,12 +61,12 @@ const mainListItems = (
             </ListItemIcon>
             <ListItemText primary="Program"/>
         </ListItem>
-        <ListItem button>
-            <ListItemIcon>
-                <BarChartIcon/>
-            </ListItemIcon>
-            <ListItemText primary="Testing"/>
-        </ListItem>
+        {/*<ListItem button>*/}
+        {/*    <ListItemIcon>*/}
+        {/*        <BarChartIcon/>*/}
+        {/*    </ListItemIcon>*/}
+        {/*    <ListItemText primary="Testing"/>*/}
+        {/*</ListItem>*/}
         <ListItem button>
             <ListItemIcon>
                 <LayersIcon/>
@@ -162,11 +165,14 @@ const styles = theme => ({
     codeErrors: {
         marginTop: theme.spacing.unit * 2,
     },
+    motorSlider: {
+        padding: '22px 0px',
+    }
 });
 
 class Dashboard extends React.Component {
     state = {
-        open: true,
+        open: false,
     };
 
     handleDrawerOpen = () => {
@@ -316,11 +322,20 @@ console.log(`Brace version: ${brace.version}`);
 
 const CodeEditor = connect(state => ({
     programCode: state.programs.all_programs[state.programs.current_program_id].code,
+    compilation_errors: state.compilation_errors,
+    program_running: state.program_running,
+    log_lines: state.log_lines,
+    motor_power: state.motor_power || {},
+    shaft_position: state.shaft_position || {},
+    // Functions
+    runCode: state.runCode,
+    stopCode: state.stopCode,
 }), dispatch => ({
     setProgramCode(code) {
         dispatch({type: 'CHANGE_PROGRAM_CODE', payload: code});
-    }
-}))(function CodeEditor({classes, programCode, setProgramCode}) {
+    },
+}))(function CodeEditor({classes, programCode, setProgramCode, compilation_errors, program_running, log_lines, runCode, stopCode, motor_power, shaft_position}) {
+    let canRun = compilation_errors.length === 0;
     return (
         <div className={classes.codeEditorContainer}>
             <AceEditor mode="python"
@@ -331,15 +346,49 @@ const CodeEditor = connect(state => ({
                        name="UNIQUE_ID_OF_DIV"
                        editorProps={{$blockScrolling: true}}/>
             <div className={classes.codeEditorSide}>
-                <Button color="primary" variant="contained" size="large" disabled={true}>
-                    <PlayArrowIcon />
-                    Run
-                </Button>
-                <div className={classes.codeErrors}>
+                { Object.keys(shaft_position).map((device, device_idx) => <div key={device_idx}>
+                    Plate {device}:
+                    <ArrowRightAltIcon fontSize="large" style={ {transform: `rotate(${90 - shaft_position[device].angle}deg)`} }/>
+                    { shaft_position[device].position }
+                </div>) }
+
+                { Object.keys(motor_power).map((device, device_idx) => <div key={device_idx}>
+                    Motor {device}:
+                    <Slider classes={{ container: classes.motorSlider }} value={motor_power[device] * 50 + 50} />
+                </div>) }
+
+                { program_running
+                    ? <Button color="secondary" variant="contained" size="large" onClick={stopCode}>
+                                              <StopIcon />
+                                              Stop program
+                                          </Button>
+                    : <Button color="primary" variant="contained" size="large" disabled={!canRun} onClick={runCode}>
+                          <PlayArrowIcon />
+                          Run program
+                      </Button>}
+
+                { compilation_errors.length > 0 && <div className={classes.codeErrors}>
                     <Typography variant="h5" color="secondary" gutterBottom component="h2">
-                        Errors
+                        Errors in the program:
                     </Typography>
-                </div>
+                    <ul>
+                        { compilation_errors.map((error, idx) => <li key={idx}>
+                            {`Line ${error.line_num}: ${error.message}`}
+                        </li>) }
+                    </ul>
+                </div>}
+
+                { log_lines.length > 0 && <div className={classes.codeErrors}>
+                    <Typography variant="h5" color="secondary" gutterBottom component="h2">
+                        Log:
+                    </Typography>
+                    <ul>
+                        { log_lines.map((logline, idx) => <li key={idx}>
+                            {`${logline.ts} ${logline.type}: ${logline.message}`}
+                        </li>) }
+                    </ul>
+                </div>}
+
             </div>
         </div>
     );

@@ -21,7 +21,7 @@
     
 ### Run backend server for development
 
-    pipenv run python server-dev.py
+    pipenv run python server.py dev
     
 ### Run frontend server for development
 

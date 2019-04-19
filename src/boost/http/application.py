@@ -2,8 +2,8 @@ import json
 import asyncio
 
 
-def create_http_app(storage, http_server_input_message_queue):
-    from quart import Quart, websocket, request, jsonify
+def create_http_app(storage, http_server_input_message_queue, get_compilation_errors_for_json, is_program_running, run_program):
+    from quart import Quart, websocket, request, jsonify, Response
 
     app = Quart('boost')
 
@@ -15,13 +15,26 @@ def create_http_app(storage, http_server_input_message_queue):
     async def whole_state():
         return jsonify({
             'programs': storage.get_programs(),
+            'compilation_errors': get_compilation_errors_for_json()['errors'],
+            'program_running': is_program_running(),
         })
 
     @app.route('/command/savePrograms', methods=['POST'])
-    async def save_programs():
-        programs = request.json
-        storage.set_programs(programs)
-        return 'Ok'
+    async def command_save_programs():
+        programs = await request.json
+        ok = storage.set_programs(programs)
+        if ok:
+            return Response('Ok', mimetype='text/plain')
+        else:
+            return Response('Compilation errors', status=400, mimetype='text/plain')
+
+    @app.route('/command/runProgram', methods=['POST'])
+    async def command_run_program():
+        ok = run_program()
+        if ok:
+            return Response('Ok', mimetype='text/plain')
+        else:
+            return Response('Compilation errors', status=400, mimetype='text/plain')
 
     async def ws_sending():
         while True:
