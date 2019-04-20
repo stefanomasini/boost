@@ -336,6 +336,8 @@ const CodeEditor = connect(state => ({
     },
 }))(function CodeEditor({classes, programCode, setProgramCode, compilation_errors, program_running, log_lines, runCode, stopCode, motor_power, shaft_position}) {
     let canRun = compilation_errors.length === 0;
+    log_lines = [...log_lines];
+    log_lines.reverse();
     return (
         <div className={classes.codeEditorContainer}>
             <AceEditor mode="python"
