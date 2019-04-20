@@ -49,6 +49,9 @@ class FakeMotor(object):
     def turn(self, direction, to, speed):
         self.emit_log('{0} MOTOR {1} TURN {2} {3} {4}'.format(self.clock.now(), self.name, direction, to, speed))
 
+    def stop(self):
+        self.emit_log('{0} MOTOR {1} STOP'.format(self.clock.now(), self.name))
+
 
 class CommandsTestSuite(unittest.TestCase):
     def setUp(self):

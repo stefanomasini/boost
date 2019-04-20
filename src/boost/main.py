@@ -39,6 +39,10 @@ class Motor(object):
         self.planner.set_plan(self.device, to, speed, 'cw' if direction == 'left' else 'ccw')
         self.log_message('{0} turning {1} to {2} at speed {3}'.format(self.device, direction, to, speed))
 
+    def stop(self):
+        self.planner.set_stop_plan(self.device)
+        self.log_message('{0} stopping'.format(self.device))
+
 
 def build_hardare_adapters(config):
     if getattr(config, 'mock_hardware', False):

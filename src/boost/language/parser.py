@@ -1,11 +1,8 @@
 from collections import namedtuple
 from functools import partial
 import re
-from ..commands import CommandTurn, CommandTimeFromStart, CommandTimeJump, CommandFunctionCall
-
-
-TURN_TO_RANGE = (1, 30)
-SPEED_RANGE = (1, 10)
+from ..commands import CommandTurn, CommandStop, CommandTimeFromStart, CommandTimeJump, CommandFunctionCall
+from .errors import ProgramSyntaxError
 
 
 ProgramLine = namedtuple('ProgramLine', 'text indentation line_num')
@@ -17,18 +14,6 @@ BlockRoot = namedtuple('BlockRoot', 'lines')
 Function = namedtuple('Function', 'parameter commands')
 
 Program = namedtuple('Program', 'commands functions')
-
-
-class ProgramSyntaxError(namedtuple('ProgramSyntaxError', 'line_num message')):
-    def pretty_print(self):
-        return 'SyntaxError, line {0}: {1}'.format(self.line_num, self.message)
-
-    def to_json(self):
-        return {
-            'type': 'SyntaxError',
-            'line_num': self.line_num,
-            'message': self.message,
-        }
 
 
 INDENTATION_RE = re.compile(r'^\ +')
@@ -141,29 +126,19 @@ def parse_program_line(program_line, functions, symbol_names, errors):
     return
 
 
+predefined_functions = {
+    'left': CommandTurn,
+    'right': CommandTurn,
+    'stop': CommandStop,
+}
+
+
 def parse_function_call(function_execution_mo, program_line, functions, symbol_names, errors):
     function_name = function_execution_mo.group(1)
     params_string = function_execution_mo.group(2)
     locals_dict = dict((v, v) for v in symbol_names)
-    if function_name in ('left', 'right'):
-        try:
-            command = eval('CommandTurn' + params_string, {'CommandTurn': partial(CommandTurn, function_name)}, locals_dict)
-        except Exception as err:
-            errors.append(ProgramSyntaxError(program_line.line_num, 'Parsing exception: {0}'.format(err)))
-            return
-        if not isinstance(command.to, int):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be an integer'))
-            return
-        if not (TURN_TO_RANGE[0] <= command.to <= TURN_TO_RANGE[1]):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be in range {0}-{1}'.format(*TURN_TO_RANGE)))
-            return
-        if not isinstance(command.speed, int):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"speed" parameter must be an integer'))
-            return
-        if not (SPEED_RANGE[0] <= command.speed <= SPEED_RANGE[1]):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"speed" parameter must be in range {0}-{1}'.format(*SPEED_RANGE)))
-            return
-        return command
+    if function_name in predefined_functions:
+        return predefined_functions[function_name].parse(program_line, function_name, params_string, locals_dict, errors)
     elif function_name in functions:
         try:
             param_list = eval('tuple' + params_string, locals_dict)

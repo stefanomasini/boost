@@ -28,3 +28,9 @@ class Planner(object):
         self.current_target_position[device] = target_position
         if self.shaft_encoder.get_current_position(device).position != target_position:
             self.motors_controller.set_target_speed(device, speed, self.motors_constants)
+
+    def set_stop_plan(self, device):
+        assert device in self.shaft_encoder.devices, 'Invalid device {0}'.format(device)
+
+        self.current_target_position[device] = None
+        self.motors_controller.set_target_speed(device, 0, self.motors_constants)

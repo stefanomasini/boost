@@ -98,6 +98,8 @@ func_a()
 """
 
 FUNCTION_WITH_STOP = """
+right(A, to=1, speed=1)
+stop(A)
 """
 
 
@@ -225,3 +227,8 @@ class ParserTestSuite(unittest.TestCase):
         errors = []
         parse_program(FUNCTION_WITHOUT_BODY, self.local_variables, errors)
         self.assertEqual(errors, [ProgramSyntaxError(line_num=3, message='Function without a body')])
+
+    def test_parse_function_with_stop(self):
+        errors = []
+        parse_program(FUNCTION_WITH_STOP, self.local_variables, errors)
+        self.assertEqual(errors, [])
