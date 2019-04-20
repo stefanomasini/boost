@@ -37,7 +37,10 @@ class Motor(object):
 
     def turn(self, direction, to, speed):
         self.planner.set_plan(self.device, to, speed, 'cw' if direction == 'left' else 'ccw')
-        self.log_message('{0} turning {1} to {2} at speed {3}'.format(self.device, direction, to, speed))
+        if to:
+            self.log_message('{0} turning {1} to {2} at speed {3}'.format(self.device, direction, to, speed))
+        else:
+            self.log_message('{0} turning {1} at speed {2}'.format(self.device, direction, speed))
 
     def stop(self):
         self.planner.set_stop_plan(self.device)

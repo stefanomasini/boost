@@ -98,7 +98,7 @@ func_a()
 """
 
 FUNCTION_WITH_STOP = """
-right(A, to=1, speed=1)
+right(A, speed=1)
 stop(A)
 """
 

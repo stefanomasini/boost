@@ -7,7 +7,7 @@ TURN_TO_RANGE = (1, 64)
 SPEED_RANGE = (1, 5)
 
 
-class CommandTurn(namedtuple('CommandTurn', 'direction target to speed')):
+class CommandTurn(namedtuple('CommandTurn', 'direction target speed to', defaults=(None,))):
     @classmethod
     def parse(cls, program_line, function_name, params_string, locals_dict, errors):
         try:
@@ -15,12 +15,13 @@ class CommandTurn(namedtuple('CommandTurn', 'direction target to speed')):
         except Exception as err:
             errors.append(ProgramSyntaxError(program_line.line_num, 'Parsing exception: {0}'.format(err)))
             return
-        if not isinstance(command.to, int):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be an integer'))
-            return
-        if not (TURN_TO_RANGE[0] <= command.to <= TURN_TO_RANGE[1]):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be in range {0}-{1}'.format(*TURN_TO_RANGE)))
-            return
+        if command.to is not None:
+            if not isinstance(command.to, int):
+                errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be an integer'))
+                return
+            if not (TURN_TO_RANGE[0] <= command.to <= TURN_TO_RANGE[1]):
+                errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be in range {0}-{1}'.format(*TURN_TO_RANGE)))
+                return
         if not isinstance(command.speed, int):
             errors.append(ProgramSyntaxError(program_line.line_num, '"speed" parameter must be an integer'))
             return
