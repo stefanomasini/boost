@@ -66,7 +66,8 @@ class Application(object):
         self.symbols = {'A': Motor('A', self.planner, self.log_message), 'B': Motor('B', self.planner, self.log_message)}
         self.loop = asyncio.get_event_loop()
         self.http_server_input_message_queue = HttpServerInputMessageQueue(self.loop)
-        self.http_app = create_http_app(self.storage, self.http_server_input_message_queue, self.get_compilation_errors_for_json, self.is_program_running, self.run_program)
+        self.http_app = create_http_app(self.storage, self.http_server_input_message_queue, self.get_compilation_errors_for_json,
+                                        self.is_program_running, self.run_program, self.stop_program)
         self.execution_context = None
 
     def run(self):
@@ -143,6 +144,10 @@ class Application(object):
             return True
         else:
             return False
+
+    def stop_program(self):
+        if self.is_program_running():
+            self.cleanup_terminated_program()
 
     def is_program_running(self):
         return self.execution_context is not None and not self.execution_context.terminated

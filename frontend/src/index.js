@@ -23,11 +23,10 @@ let initialState = {
             });
     },
     stopCode() {
-        // reduxStore.dispatch({ type: 'SET_PROGRAM_RUNNING', payload: true });
-        // networkApi.runCode()
-        //     .catch(err => {
-        //         reportError(err);
-        //     });
+        networkApi.stopCode()
+            .catch(err => {
+                reportError(err);
+            });
     },
 };
 
@@ -154,6 +153,10 @@ class NetworkApi {
 
     async runCode() {
         return await this._request('POST', '/command/runProgram');
+    }
+
+    async stopCode() {
+        return await this._request('POST', '/command/stopProgram');
     }
 
     async _request(method, url, payload) {
