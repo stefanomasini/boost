@@ -82,8 +82,20 @@ say_no(A)
 def say_no(X):
     right(X, to=5, speed=3)
     right(X, to=1, speed=3)
+
+def say_no_again(X):
+    right(X, to=5, speed=3)
+    right(X, to=1, speed=3)
 """
 
+
+FUNCTION_WITHOUT_BODY = """
+def func_a(X):
+def func_b(X):
+    right(X, to=1, speed=3)
+    
+func_a()
+"""
 
 FUNCTION_WITH_STOP = """
 """
@@ -209,4 +221,7 @@ class ParserTestSuite(unittest.TestCase):
         parse_program(FUNCTION_AT_BOTTOM, self.local_variables, errors)
         self.assertEqual(errors, [])
 
-# Also test multiple function blocks
+    def test_function_without_body(self):
+        errors = []
+        parse_program(FUNCTION_WITHOUT_BODY, self.local_variables, errors)
+        self.assertEqual(errors, [ProgramSyntaxError(line_num=3, message='Function without a body')])

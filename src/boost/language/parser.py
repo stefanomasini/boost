@@ -80,6 +80,9 @@ def parse_blocks(program, errors):
         if program_line.indentation > expected_indentation:
             errors.append(ProgramSyntaxError(program_line.line_num, 'Unexpected indentation'))
         elif current_function_name and program_line.indentation == expected_indentation-1:
+            if not current_block:
+                errors.append(ProgramSyntaxError(program_line.line_num, 'Function without a body'))
+                break
             yield BlockFunction(current_function_name, current_function_parameter, current_block)
             current_block = []
             current_function_name = None
@@ -113,7 +116,10 @@ def parse_blocks(program, errors):
             current_block.append(program_line)
 
     if current_block:
-        yield BlockRoot(current_block)
+        if current_function_name:
+            yield BlockFunction(current_function_name, current_function_parameter, current_block)
+        else:
+            yield BlockRoot(current_block)
 
 
 def parse_program_line(program_line, functions, symbol_names, errors):
