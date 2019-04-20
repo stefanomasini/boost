@@ -1,7 +1,7 @@
 from collections import namedtuple
 from functools import partial
 import re
-from ..commands import CommandTurn, CommandStop, CommandTimeFromStart, CommandTimeJump, CommandFunctionCall
+from ..commands import CommandTurn, CommandStop, CommandTimeFromStart, CommandTimeJump, CommandFunctionCall, CommandRestartProgram
 from .errors import ProgramSyntaxError
 
 
@@ -130,6 +130,7 @@ predefined_functions = {
     'left': CommandTurn,
     'right': CommandTurn,
     'stop': CommandStop,
+    'restart_program': CommandRestartProgram,
 }
 
 

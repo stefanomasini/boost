@@ -56,6 +56,16 @@ class CommandStop(namedtuple('CommandStop', 'target')):
         return False  # Non blocking - continue executing following commands
 
 
+class CommandRestartProgram(object):
+    @classmethod
+    def parse(cls, program_line, function_name, params_string, locals_dict, errors):
+        return cls()
+
+    def execute(self, execution_context):
+        execution_context.initialize_execution()
+        return True  # "blocking" - really, just restarting and scheduling next execution at time 0 (i.e. ASAP)
+
+
 class CommandTimeFromStart(namedtuple('CommandTimeFromStart', 'millis')):
     def execute(self, execution_context):
         execution_context.schedule_next_execution_at_time(self.millis)

@@ -29,11 +29,19 @@ class ExecutionContext(object):
     def __init__(self, program, clock, symbols, emit_messages):
         self.clock = clock
         self.functions = program.functions
-        self.scopes = [Scope(program.commands, symbols)]
-        self.start_time = clock.now()
-        self.next_execution_secs_from_start = 0
-        self.terminated = False
+        self.program = program
+        self.symbols = symbols
         self.emit_messages = emit_messages
+        self.terminated = False
+        self.scopes = None
+        self.start_time = None
+        self.next_execution_secs_from_start = None
+        self.initialize_execution()
+
+    def initialize_execution(self):
+        self.scopes = [Scope(self.program.commands, self.symbols)]
+        self.start_time = self.clock.now()
+        self.next_execution_secs_from_start = 0
 
     def warning(self, message):
         self.emit_messages(WarningRuntimeMessage(message))

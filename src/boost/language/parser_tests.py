@@ -100,6 +100,7 @@ func_a()
 FUNCTION_WITH_STOP = """
 right(A, speed=1)
 stop(A)
+restart_program()
 """
 
 
