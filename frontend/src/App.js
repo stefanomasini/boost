@@ -10,6 +10,7 @@ import List from '@material-ui/core/List';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
+import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 // import Badge from '@material-ui/core/Badge';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -305,7 +306,7 @@ const ProgramChoice = connect(state => {
                     <Paper>
                       <ClickAwayListener onClickAway={close}>
                         <MenuList>
-                            { programs.map(program => <MenuItem onClick={() => _choose(program.program_id)}>{program.name}</MenuItem>) }
+                            { programs.map(program => <MenuItem key={program.program_id} onClick={() => _choose(program.program_id)}>{program.name}</MenuItem>) }
                         </MenuList>
                       </ClickAwayListener>
                     </Paper>
@@ -327,14 +328,17 @@ const CodeEditor = connect(state => ({
     log_lines: state.log_lines,
     motor_power: state.motor_power || {},
     shaft_position: state.shaft_position || {},
+    auto_run: state.getAutoRun(state),
     // Functions
     runCode: state.runCode,
     stopCode: state.stopCode,
+    toggleAutoRun: state.toggleAutoRun,
 }), dispatch => ({
     setProgramCode(code) {
         dispatch({type: 'CHANGE_PROGRAM_CODE', payload: code});
     },
-}))(function CodeEditor({classes, programCode, setProgramCode, compilation_errors, program_running, log_lines, runCode, stopCode, motor_power, shaft_position}) {
+}))(function CodeEditor({ classes, programCode, setProgramCode, compilation_errors, program_running, log_lines,
+                          runCode, stopCode, motor_power, shaft_position, auto_run, toggleAutoRun }) {
     let canRun = compilation_errors.length === 0;
     log_lines = [...log_lines];
     log_lines.reverse();
@@ -368,6 +372,10 @@ const CodeEditor = connect(state => ({
                           <PlayArrowIcon />
                           Run program
                       </Button>}
+
+                { !program_running && <span>
+                </span>}
+                <Checkbox disabled={program_running} checked={auto_run} onChange={toggleAutoRun}/> Run automatically at start-up
 
                 { compilation_errors.length > 0 && <div className={classes.codeErrors}>
                     <Typography variant="h5" color="secondary" gutterBottom component="h2">

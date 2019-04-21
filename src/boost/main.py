@@ -94,6 +94,10 @@ class Application(object):
             raise Exception('Error initializing the ThunderBorgAdapter')
         self.shaft_encoder.start(self.planner.on_shaft_position)
         self.compile_program()
+        if self.storage.should_auto_run_current_program():
+            self.run_program()
+        else:
+            self.compile_program()
 
     def stop_everything(self):
         self.motors_adapter.stop()

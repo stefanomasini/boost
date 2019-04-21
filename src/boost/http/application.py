@@ -17,6 +17,7 @@ def create_http_app(storage, http_server_input_message_queue, get_compilation_er
             'programs': storage.get_programs(),
             'compilation_errors': get_compilation_errors_for_json()['errors'],
             'program_running': is_program_running(),
+            'auto_run': storage.get_auto_run(),
         })
 
     @app.route('/command/savePrograms', methods=['POST'])
@@ -40,6 +41,12 @@ def create_http_app(storage, http_server_input_message_queue, get_compilation_er
     async def command_stop_program():
         stop_program()
         return Response('Ok', mimetype='text/plain')
+
+    @app.route('/command/setAutoRun', methods=['POST'])
+    async def command_set_auto_run():
+        data = await request.json
+        result = storage.set_auto_run(data)
+        return jsonify(result)
 
     async def ws_sending():
         while True:

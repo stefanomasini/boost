@@ -28,7 +28,28 @@ let initialState = {
                 reportError(err);
             });
     },
+    toggleAutoRun() {
+        let state = reduxStore.getState();
+        let autoRun = getAutoRun(state);
+        networkApi.setAutoRun(!autoRun, state.programs.current_program_id)
+            .then(data => {
+                reduxStore.dispatch({ type: 'SET_AUTO_RUN', payload: data });
+            })
+            .catch(err => {
+                reportError(err);
+            })
+    },
+    getAutoRun,
 };
+
+
+function getAutoRun(state) {
+    if (!state.auto_run || !state.auto_run.auto_run) {
+        return false;
+    }
+    return state.programs.current_program_id === state.auto_run.program_id;
+}
+
 
 function reducer(state = initialState, action) {
     switch (action.type) {
@@ -119,6 +140,11 @@ function reducer(state = initialState, action) {
                     [action.payload.device]: { angle: action.payload.angle, position: action.payload.position },
                 },
             };
+        case 'SET_AUTO_RUN':
+            return {
+                ...state,
+                auto_run: action.payload,
+            };
         default:
             return state;
     }
@@ -157,6 +183,10 @@ class NetworkApi {
 
     async stopCode() {
         return await this._request('POST', '/command/stopProgram');
+    }
+
+    async setAutoRun(auto_run, program_id) {
+        return await this._request('POST', '/command/setAutoRun', { auto_run, program_id });
     }
 
     async _request(method, url, payload) {

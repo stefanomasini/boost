@@ -28,6 +28,7 @@ class Storage(object):
         if not os.path.exists(PROGRAMS_DIR):
             os.makedirs(PROGRAMS_DIR)
         self._save_programs()
+        self._save_meta()
 
     def _save_programs(self):
         meta = {
@@ -41,6 +42,7 @@ class Storage(object):
     def _read_data_folder(self):
         return {
             'programs': self._read_programs(),
+            'meta': self._read_meta(),
         }
 
     def _read_programs(self):
@@ -56,6 +58,12 @@ class Storage(object):
             }
         return programs
 
+    def _read_meta(self):
+        return json.load(open(os.path.join(DATA_DIR, 'meta.json'), 'r', encoding='utf-8'))
+
+    def _save_meta(self):
+        json.dump(self.data['meta'], open(os.path.join(DATA_DIR, 'meta.json'), 'w', encoding='utf-8'))
+
     def _create_default_data(self):
         return {
             'programs': {
@@ -66,7 +74,10 @@ class Storage(object):
                     },
                 },
                 'current_program_id': 1,
-            }
+            },
+            'meta': {
+                'auto_run': None,
+            },
         }
 
     def get_programs(self):
@@ -75,6 +86,7 @@ class Storage(object):
     def set_programs(self, programs):
         old_code = self.get_current_program()['code']
         programs['all_programs'] = dict((int(program_id), program) for program_id, program in programs['all_programs'].items())
+        programs['current_program_id'] = int(programs['current_program_id'])
         self.data['programs'] = programs
         self._save_programs()
         new_code = self.get_current_program()['code']
@@ -88,3 +100,19 @@ class Storage(object):
 
     def get_current_program(self):
         return self.data['programs']['all_programs'][self.data['programs']['current_program_id']]
+
+    def get_auto_run(self):
+        return self.data['meta'].get('auto_run', None)
+
+    def set_auto_run(self, data):
+        self.data['meta']['auto_run'] = data
+        self._save_meta()
+        return self.get_auto_run()
+
+    def should_auto_run_current_program(self):
+        if not self.data['meta'].get('auto_run'):
+            return False
+        if not self.data['meta']['auto_run']['auto_run']:
+            return False
+        return self.data['meta']['auto_run']['program_id'] == self.data['programs']['current_program_id']
+
