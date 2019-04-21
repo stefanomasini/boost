@@ -73,8 +73,9 @@ class Application(object):
         self.symbols = {'A': Motor('A', self.planner, self.log_message), 'B': Motor('B', self.planner, self.log_message)}
         self.loop = asyncio.get_event_loop()
         self.http_server_input_message_queue = HttpServerInputMessageQueue(self.loop)
+        device_names = list(config.sensor_devices.keys())
         self.http_app = create_http_app(self.storage, self.http_server_input_message_queue, self.get_compilation_errors_for_json,
-                                        self.is_program_running, self.run_program, self.stop_program)
+                                        self.is_program_running, self.run_program, self.stop_program, device_names)
         self.execution_context = None
 
     def run(self):

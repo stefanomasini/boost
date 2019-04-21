@@ -7,6 +7,10 @@ import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
@@ -161,13 +165,31 @@ const styles = theme => ({
         flexDirection: 'row',
     },
     codeEditorSide: {
+        width: 600,
         marginLeft: theme.spacing.unit * 3,
     },
     codeErrors: {
         marginTop: theme.spacing.unit * 2,
+        padding: theme.spacing.unit,
     },
     motorSlider: {
         padding: '22px 0px',
+    },
+    devices: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    device: {
+        width: 200,
+        flexGrow: 1,
+        marginRight: theme.spacing.unit,
+        marginBottom: 2 * theme.spacing.unit,
+        padding: theme.spacing.unit,
+    },
+    logTable: {
+        height: 500,
+        overflow: 'scroll',
     }
 });
 
@@ -326,6 +348,7 @@ const CodeEditor = connect(state => ({
     compilation_errors: state.compilation_errors,
     program_running: state.program_running,
     log_lines: state.log_lines,
+    device_names: state.device_names,
     motor_power: state.motor_power || {},
     shaft_position: state.shaft_position || {},
     auto_run: state.getAutoRun(state),
@@ -337,7 +360,7 @@ const CodeEditor = connect(state => ({
     setProgramCode(code) {
         dispatch({type: 'CHANGE_PROGRAM_CODE', payload: code});
     },
-}))(function CodeEditor({ classes, programCode, setProgramCode, compilation_errors, program_running, log_lines,
+}))(function CodeEditor({ classes, programCode, setProgramCode, compilation_errors, program_running, log_lines, device_names,
                           runCode, stopCode, motor_power, shaft_position, auto_run, toggleAutoRun }) {
     let canRun = compilation_errors.length === 0;
     log_lines = [...log_lines];
@@ -347,21 +370,15 @@ const CodeEditor = connect(state => ({
             <AceEditor mode="python"
                        theme="github"
                        value={programCode}
+                       readOnly={program_running}
                        onChange={setProgramCode}
                        debounceChangePeriod={300}
                        name="UNIQUE_ID_OF_DIV"
                        editorProps={{$blockScrolling: true}}/>
             <div className={classes.codeEditorSide}>
-                { Object.keys(shaft_position).map((device, device_idx) => <div key={device_idx}>
-                    Plate {device}:
-                    <ArrowRightAltIcon fontSize="large" style={ {transform: `rotate(${90 - shaft_position[device].angle}deg)`} }/>
-                    { shaft_position[device].position }
-                </div>) }
-
-                { Object.keys(motor_power).map((device, device_idx) => <div key={device_idx}>
-                    Motor {device}:
-                    <Slider classes={{ container: classes.motorSlider }} value={motor_power[device] * 50 + 50} />
-                </div>) }
+                <div className={classes.devices}>
+                    { device_names.map(device => <Device key={device} device={device} shaft_position={shaft_position[device]} motor_power={motor_power[device]} classes={classes} program_running={program_running}/>)}
+                </div>
 
                 { program_running
                     ? <Button color="secondary" variant="contained" size="large" onClick={stopCode}>
@@ -375,29 +392,38 @@ const CodeEditor = connect(state => ({
 
                 { !program_running && <span>
                 </span>}
-                <Checkbox disabled={program_running} checked={auto_run} onChange={toggleAutoRun}/> Run automatically at start-up
+                <Typography><Checkbox disabled={program_running} checked={auto_run} onChange={toggleAutoRun}/> Run automatically at start-up</Typography>
 
-                { compilation_errors.length > 0 && <div className={classes.codeErrors}>
-                    <Typography variant="h5" color="secondary" gutterBottom component="h2">
+                { compilation_errors.length > 0 && <Paper className={classes.codeErrors}>
+                    <Typography variant="h5" color="secondary" gutterBottom>
                         Errors in the program:
                     </Typography>
-                    <ul>
-                        { compilation_errors.map((error, idx) => <li key={idx}>
-                            {`Line ${error.line_num}: ${error.message}`}
-                        </li>) }
-                    </ul>
-                </div>}
+                    <Table>
+                        <TableBody>
+                            { compilation_errors.map((error, idx) => <TableRow key={idx}>
+                                <TableCell><Typography variant="body1"><i>Line {error.line_num}</i></Typography></TableCell>
+                                <TableCell><Typography>{error.message}</Typography></TableCell>
+                            </TableRow>) }
+                        </TableBody>
+                    </Table>
+                </Paper>}
 
-                { log_lines.length > 0 && <div className={classes.codeErrors}>
-                    <Typography variant="h5" color="secondary" gutterBottom component="h2">
+                { log_lines.length > 0 && <Paper className={classes.codeErrors}>
+                    <Typography variant="h5" gutterBottom>
                         Log:
                     </Typography>
-                    <ul>
-                        { log_lines.map((logline, idx) => <li key={idx}>
-                            {`${logline.ts} ${logline.type}: ${logline.message}`}
-                        </li>) }
-                    </ul>
-                </div>}
+                    <div className={classes.logTable}>
+                        <Table padding="dense">
+                            <TableBody>
+                            { log_lines.map((logline, idx) => <TableRow key={idx}>
+                                <TableCell><Typography variant="body1"><i>{logline.ts}</i></Typography></TableCell>
+                                <TableCell><Typography><i>{logline.type}</i></Typography></TableCell>
+                                <TableCell><Typography>{logline.message}</Typography></TableCell>
+                            </TableRow>) }
+                            </TableBody>
+                        </Table>
+                    </div>
+                </Paper>}
 
             </div>
         </div>
@@ -408,6 +434,38 @@ CodeEditor.propTypes = {
     classes: PropTypes.object.isRequired,
 };
 
+
+function Device({ device, shaft_position, motor_power, classes, program_running }) {
+    if (!shaft_position) {
+        shaft_position = {
+            angle: 0,
+            position: '?',
+            undef: true,
+        };
+    }
+    if (typeof motor_power === typeof undefined || motor_power === null) {
+        motor_power = 0;
+    }
+    return <Paper className={classes.device}>
+        <table><tbody><tr>
+            <td>
+                <Typography variant="h5">{device}</Typography>
+            </td>
+            <td>
+                <ArrowRightAltIcon fontSize="large" style={ {transform: `rotate(${90 - shaft_position.angle}deg)`, color: shaft_position.undef ? 'gray' : null} }/>
+            </td>
+            { shaft_position.undef ? <td>
+                <Typography style={{ color: 'gray' }}>N/A</Typography>
+            </td> : <td>
+                <Typography>{ shaft_position.angle } deg ({ shaft_position.angle })</Typography>
+            </td> }
+        </tr></tbody></table>
+        <Typography>Motor: {parseInt(motor_power * 100) / 100}</Typography>
+        <Slider classes={{ container: classes.motorSlider }}
+                value={motor_power * 50 + 50}
+                disabled={program_running} />
+    </Paper>;
+}
 
 const ProgramName = connect(state => ({
     programName: state.programs.all_programs[state.programs.current_program_id].name,

@@ -2,7 +2,7 @@ import json
 import asyncio
 
 
-def create_http_app(storage, http_server_input_message_queue, get_compilation_errors_for_json, is_program_running, run_program, stop_program):
+def create_http_app(storage, http_server_input_message_queue, get_compilation_errors_for_json, is_program_running, run_program, stop_program, device_names):
     from quart import Quart, websocket, request, jsonify, Response
 
     app = Quart('boost')
@@ -18,6 +18,7 @@ def create_http_app(storage, http_server_input_message_queue, get_compilation_er
             'compilation_errors': get_compilation_errors_for_json()['errors'],
             'program_running': is_program_running(),
             'auto_run': storage.get_auto_run(),
+            'device_names': device_names,
         })
 
     @app.route('/command/savePrograms', methods=['POST'])
