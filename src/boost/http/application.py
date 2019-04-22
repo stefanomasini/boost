@@ -2,7 +2,7 @@ import json
 import asyncio
 
 
-def create_http_app(storage, http_server_input_message_queue, get_compilation_errors_for_json, is_program_running, run_program, stop_program, device_names):
+def create_http_app(storage, http_server_input_message_queue, get_compilation_errors_for_json, is_program_running, run_program, stop_program, device_names, set_motor_power, reset_motors):
     from quart import Quart, websocket, request, jsonify, Response
 
     app = Quart('boost')
@@ -48,6 +48,17 @@ def create_http_app(storage, http_server_input_message_queue, get_compilation_er
         data = await request.json
         result = storage.set_auto_run(data)
         return jsonify(result)
+
+    @app.route('/command/setMotorPower', methods=['POST'])
+    async def command_set_motor_power():
+        data = await request.json
+        set_motor_power(data['device'], data['power'])
+        return Response('Ok', mimetype='text/plain')
+
+    @app.route('/command/resetMotors', methods=['POST'])
+    async def command_reset_motors():
+        reset_motors()
+        return Response('Ok', mimetype='text/plain')
 
     async def ws_sending():
         while True:

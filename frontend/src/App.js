@@ -352,16 +352,19 @@ const CodeEditor = connect(state => ({
     motor_power: state.motor_power || {},
     shaft_position: state.shaft_position || {},
     auto_run: state.getAutoRun(state),
+    testing_motors: state.testing_motors,
     // Functions
     runCode: state.runCode,
     stopCode: state.stopCode,
     toggleAutoRun: state.toggleAutoRun,
+    changeMotorPower: state.changeMotorPower,
+    resetMotors: state.resetMotors,
 }), dispatch => ({
     setProgramCode(code) {
         dispatch({type: 'CHANGE_PROGRAM_CODE', payload: code});
     },
 }))(function CodeEditor({ classes, programCode, setProgramCode, compilation_errors, program_running, log_lines, device_names,
-                          runCode, stopCode, motor_power, shaft_position, auto_run, toggleAutoRun }) {
+                          runCode, stopCode, motor_power, shaft_position, auto_run, toggleAutoRun, changeMotorPower, testing_motors, resetMotors }) {
     let canRun = compilation_errors.length === 0;
     log_lines = [...log_lines];
     log_lines.reverse();
@@ -377,10 +380,20 @@ const CodeEditor = connect(state => ({
                        editorProps={{$blockScrolling: true}}/>
             <div className={classes.codeEditorSide}>
                 <div className={classes.devices}>
-                    { device_names.map(device => <Device key={device} device={device} shaft_position={shaft_position[device]} motor_power={motor_power[device]} classes={classes} program_running={program_running}/>)}
+                    { device_names.map(device => <Device key={device} device={device}
+                                                         shaft_position={shaft_position[device]}
+                                                         motor_power={motor_power[device]}
+                                                         classes={classes}
+                                                         program_running={program_running}
+                                                         onChange={changeMotorPower} />)}
                 </div>
 
-                { program_running
+                { testing_motors
+                    ? <Button color="secondary" variant="contained" size="large" onClick={resetMotors}>
+                          <StopIcon />
+                          Reset motors
+                      </Button>
+                    : program_running
                     ? <Button color="secondary" variant="contained" size="large" onClick={stopCode}>
                                               <StopIcon />
                                               Stop program
@@ -435,7 +448,7 @@ CodeEditor.propTypes = {
 };
 
 
-function Device({ device, shaft_position, motor_power, classes, program_running }) {
+function Device({ device, shaft_position, motor_power, classes, program_running, onChange }) {
     if (!shaft_position) {
         shaft_position = {
             angle: 0,
@@ -463,6 +476,7 @@ function Device({ device, shaft_position, motor_power, classes, program_running 
         <Typography>Motor: {parseInt(motor_power * 100) / 100}</Typography>
         <Slider classes={{ container: classes.motorSlider }}
                 value={motor_power * 50 + 50}
+                onChange={(event, value) => { if (!program_running) { onChange(device, (value - 50) / 50); } }}
                 disabled={program_running} />
     </Paper>;
 }

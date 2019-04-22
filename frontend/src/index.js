@@ -6,6 +6,7 @@ import * as serviceWorker from './serviceWorker';
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
 import moment from 'moment';
+import debounce from 'lodash.debounce';
 
 
 function now_str() {
@@ -15,6 +16,7 @@ function now_str() {
 
 let initialState = {
     log_lines: [],
+    testing_motors: false,
     runCode() {
         reduxStore.dispatch({ type: 'SET_PROGRAM_RUNNING', payload: true });
         networkApi.runCode()
@@ -37,9 +39,25 @@ let initialState = {
             })
             .catch(err => {
                 reportError(err);
-            })
+            });
     },
     getAutoRun,
+    changeMotorPower: debounce(function (device, power) {
+        reduxStore.dispatch({ type: 'SET_TESTING_MOTORS', payload: true });
+        networkApi.changeMotorPower(device, power)
+            .catch(err => {
+                reportError(err);
+            });
+    }, 200, { maxWait: 200 }),
+    resetMotors() {
+        networkApi.resetMotors()
+            .then(() => {
+                reduxStore.dispatch({ type: 'SET_TESTING_MOTORS', payload: false });
+            })
+            .catch(err => {
+                reportError(err);
+            });
+    },
 };
 
 
@@ -145,6 +163,11 @@ function reducer(state = initialState, action) {
                 ...state,
                 auto_run: action.payload,
             };
+        case 'SET_TESTING_MOTORS':
+            return {
+                ...state,
+                testing_motors: action.payload,
+            };
         default:
             return state;
     }
@@ -187,6 +210,14 @@ class NetworkApi {
 
     async setAutoRun(auto_run, program_id) {
         return await this._request('POST', '/command/setAutoRun', { auto_run, program_id });
+    }
+
+    async changeMotorPower(device, power) {
+        return await this._request('POST', '/command/setMotorPower', { device, power });
+    }
+
+    async resetMotors() {
+        return await this._request('POST', '/command/resetMotors');
     }
 
     async _request(method, url, payload) {

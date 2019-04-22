@@ -12,6 +12,9 @@ class MotorsController(object):
         self.current_power = dict((motor_name, 0) for motor_name in motor_names)
         self.ramp_up = dict((motor_name, None) for motor_name in motor_names)
 
+    def set_power_manually(self, motor_name, power):
+        self.current_power[motor_name] = power
+
     def set_target_speed(self, motor_name, speed, constants):
         assert motor_name in self.current_power, 'Invalid motor {0}'.format(motor_name)
         self.ramp_up[motor_name] = _get_ramp_up(constants, self.current_power[motor_name], speed, self.clock.now())
@@ -31,10 +34,12 @@ class MotorsController(object):
 
     # To be called periodically to drive the motors adapter
     def apply_motor_power(self, adapter):
-        for motor_name, ramp_up in self.ramp_up.items():
+        for motor_name, ramp_up in list(self.ramp_up.items()):
             if ramp_up:
-                power = ramp_up.calculate_power(self.clock.now())
+                power, completed = ramp_up.calculate_power(self.clock.now())
                 self.current_power[motor_name] = power
+                if completed:
+                    self.ramp_up[motor_name] = None
         for motor_name, power in self.current_power.items():
             adapter.set_motor_power(motor_name, power)
 
@@ -73,7 +78,7 @@ class RampUp(object):
 
     def calculate_power(self, now):
         if now > self.target_time:
-            return self.target_power
+            return self.target_power, True
         elapsed_time_in_sec = (now - self.start_time).total_seconds()
-        return self.start_power + self.power_ramp_up_per_sec * elapsed_time_in_sec
+        return self.start_power + self.power_ramp_up_per_sec * elapsed_time_in_sec, False
 

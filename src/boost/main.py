@@ -75,7 +75,7 @@ class Application(object):
         self.http_server_input_message_queue = HttpServerInputMessageQueue(self.loop)
         device_names = list(config.sensor_devices.keys())
         self.http_app = create_http_app(self.storage, self.http_server_input_message_queue, self.get_compilation_errors_for_json,
-                                        self.is_program_running, self.run_program, self.stop_program, device_names)
+                                        self.is_program_running, self.run_program, self.stop_program, device_names, self.set_motor_power, self.reset_motors)
         self.execution_context = None
 
     def run(self):
@@ -142,6 +142,14 @@ class Application(object):
 
     def send_redux_message(self, type, payload):
         self.http_server_input_message_queue.send_message(type=type, payload=payload)
+
+    def set_motor_power(self, device, power):
+        if not self.is_program_running():
+            self.motors_controller.set_power_manually(device, power)
+
+    def reset_motors(self):
+        if not self.is_program_running():
+            self.motors_controller.stop_all_motors(self.storage.get_motors_constants())
 
     async def apply_motor_power_task(self):
         while True:
