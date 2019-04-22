@@ -168,9 +168,51 @@ function reducer(state = initialState, action) {
                 ...state,
                 testing_motors: action.payload,
             };
+        case 'CHANGE_POWER_DEFINITION':
+            return {
+                ...state,
+                constants: {
+                    ...state.constants,
+                    power_definitions: replace_in_list(state.constants.power_definitions, action.payload.levelIdx, action.payload.value),
+                }
+            };
+        case 'CHANGE_NUM_POWER_DEFINITION_LEVELS':
+            return {
+                ...state,
+                constants: {
+                    ...state.constants,
+                    power_definitions: change_list_length(state.constants.power_definitions, action.payload),
+                }
+            };
+        case 'CHANGE_RAMP_UP_TIME':
+            return {
+                ...state,
+                constants: {
+                    ...state.constants,
+                    ramp_up_time_from_zero_to_max_in_sec: action.payload,
+                }
+            };
         default:
             return state;
     }
+}
+
+function replace_in_list(list, idx, value) {
+    let new_list = [...list];
+    new_list[idx] = value;
+    return new_list;
+}
+
+function change_list_length(list, length) {
+    let new_list = [...list];
+    if (new_list.length > length) {
+        new_list = new_list.slice(0, length);
+    } else {
+        while (new_list.length < length) {
+            new_list.push(1);
+        }
+    }
+    return new_list;
 }
 
 let reduxStore = createStore(
@@ -220,6 +262,10 @@ class NetworkApi {
         return await this._request('POST', '/command/resetMotors');
     }
 
+    async saveConstants(constants) {
+        return await this._request('POST', '/command/saveConstants', constants);
+    }
+
     async _request(method, url, payload) {
         let params = {
             method,
@@ -265,7 +311,16 @@ function onStateChanged(oldState, newState) {
                 }
             });
     }
+    if (oldState.constants !== newState.constants) {
+        saveNewConstants(newState.constants);
+    }
 }
+
+
+const saveNewConstants = debounce(function (constants) {
+    networkApi.saveConstants(constants)
+        .catch(reportError);
+}, 1000, { maxWait: 1000 });
 
 
 function startApplicationWithState(applicationState) {

@@ -29,6 +29,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 // import SimpleLineChart from './SimpleLineChart';
 // import SimpleTable from './SimpleTable';
 import TextField from '@material-ui/core/TextField';
+// import InputAdornment from '@material-ui/core/InputAdornment';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import Grow from '@material-ui/core/Grow';
 import Paper from '@material-ui/core/Paper';
@@ -47,6 +48,7 @@ import DashboardIcon from '@material-ui/icons/Dashboard';
 import LayersIcon from '@material-ui/icons/Layers';
 // import AssignmentIcon from '@material-ui/icons/Assignment';
 import Slider from '@material-ui/lab/Slider';
+import NumberFormat from 'react-number-format';
 
 import { connect } from 'react-redux'
 
@@ -57,29 +59,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/python';
 import 'brace/theme/github';
 
-
-const mainListItems = (
-    <div>
-        <ListItem button>
-            <ListItemIcon>
-                <DashboardIcon/>
-            </ListItemIcon>
-            <ListItemText primary="Program"/>
-        </ListItem>
-        {/*<ListItem button>*/}
-        {/*    <ListItemIcon>*/}
-        {/*        <BarChartIcon/>*/}
-        {/*    </ListItemIcon>*/}
-        {/*    <ListItemText primary="Testing"/>*/}
-        {/*</ListItem>*/}
-        <ListItem button>
-            <ListItemIcon>
-                <LayersIcon/>
-            </ListItemIcon>
-            <ListItemText primary="Configuration"/>
-        </ListItem>
-    </div>
-);
+console.log(`Brace version: ${brace.version}`);
 
 
 const drawerWidth = 240;
@@ -196,6 +176,7 @@ const styles = theme => ({
 class Dashboard extends React.Component {
     state = {
         open: false,
+        screen: 'program',
     };
 
     handleDrawerOpen = () => {
@@ -208,7 +189,7 @@ class Dashboard extends React.Component {
 
     render() {
         const {classes} = this.props;
-
+        const {screen} = this.state;
 
         return (
             <div className={classes.root}>
@@ -226,17 +207,7 @@ class Dashboard extends React.Component {
                             <MenuIcon/>
                         </IconButton>
 
-                        <ProgramChoice/>
-
-                        <Typography
-                            component="h1"
-                            variant="h6"
-                            color="inherit"
-                            noWrap
-                            className={classes.title}>
-                            <ProgramName/>
-                        </Typography>
-
+                        { screen === 'program' ? <ProgramHeading classes={classes}/> : <ConfigurationHeading classes={classes}/> }
                     </Toolbar>
                 </AppBar>
                 <Drawer variant="permanent"
@@ -250,23 +221,24 @@ class Dashboard extends React.Component {
                         </IconButton>
                     </div>
                     <Divider/>
-                    <List>{mainListItems}</List>
+                    <List>
+                        <ListItem button selected={screen === 'program'} onClick={() => { this.setState({ screen: 'program' }); }}>
+                            <ListItemIcon>
+                                <DashboardIcon/>
+                            </ListItemIcon>
+                            <ListItemText primary="Program"/>
+                        </ListItem>
+                        <ListItem button selected={screen === 'configuration'} onClick={() => { this.setState({ screen: 'configuration' }); }}>
+                            <ListItemIcon>
+                                <LayersIcon/>
+                            </ListItemIcon>
+                            <ListItemText primary="Configuration"/>
+                        </ListItem>
+                    </List>
                 </Drawer>
                 <main className={classes.content}>
                     <div className={classes.appBarSpacer}/>
-                    <CodeEditor classes={classes}/>
-                    {/*<Typography variant="h4" gutterBottom component="h2">*/}
-                        {/*Orders*/}
-                    {/*</Typography>*/}
-                    {/*<Typography component="div" className={classes.chartContainer}>*/}
-                        {/*/!*<SimpleLineChart />*!/*/}
-                    {/*</Typography>*/}
-                    {/*<Typography variant="h4" gutterBottom component="h2">*/}
-                        {/*Products*/}
-                    {/*</Typography>*/}
-                    {/*<div className={classes.tableContainer}>*/}
-                        {/*/!*<SimpleTable />*!/*/}
-                    {/*</div>*/}
+                    { screen === 'program' ? <CodeEditor classes={classes}/> : <Configuration classes={classes} /> }
                 </main>
             </div>
         );
@@ -276,6 +248,34 @@ class Dashboard extends React.Component {
 Dashboard.propTypes = {
     classes: PropTypes.object.isRequired,
 };
+
+
+function ProgramHeading({ classes }) {
+    return [
+        <ProgramChoice key={1}/>,
+        <Typography
+            key={2}
+            component="h1"
+            variant="h6"
+            color="inherit"
+            noWrap
+            className={classes.title}>
+            <ProgramName/>
+        </Typography>,
+    ];
+}
+
+
+function ConfigurationHeading({ classes }) {
+    return <Typography
+                component="h1"
+                variant="h6"
+                color="inherit"
+                noWrap
+                className={classes.title}>
+                Configuration
+            </Typography>;
+}
 
 
 const ProgramChoice = connect(state => {
@@ -338,9 +338,6 @@ const ProgramChoice = connect(state => {
         </div>
     );
 });
-
-
-console.log(`Brace version: ${brace.version}`);
 
 
 const CodeEditor = connect(state => ({
@@ -481,6 +478,7 @@ function Device({ device, shaft_position, motor_power, classes, program_running,
     </Paper>;
 }
 
+
 const ProgramName = connect(state => ({
     programName: state.programs.all_programs[state.programs.current_program_id].name,
 }), dispatch => ({
@@ -500,6 +498,122 @@ const ProgramName = connect(state => ({
             ? <TextField value={state.value} onChange={e => setState({ editing: true, value: e.target.value })} autoFocus={true} onBlur={onBlur}/>
             : <span onClick={() => setState({ editing: true, value: programName })}>{programName}</span>
     );
+});
+
+
+function PercentNumberInput(props) {
+    const {inputRef, onChange, ...other} = props;
+
+    return (
+        <NumberFormat
+            {...other}
+            getInputRef={inputRef}
+            onValueChange={values => {
+                onChange({
+                    target: {
+                        value: values.value,
+                    },
+                });
+            }}
+            suffix="%"
+            allowNegative={false}
+        />
+    );
+}
+
+
+function NumberInput(props) {
+    const {inputRef, onChange, ...other} = props;
+
+    return (
+        <NumberFormat
+            {...other}
+            getInputRef={inputRef}
+            onValueChange={values => {
+                onChange({
+                    target: {
+                        value: values.value,
+                    },
+                });
+            }}
+            allowNegative={false}
+        />
+    );
+}
+
+
+function MsNumberInput(props) {
+    const {inputRef, onChange, ...other} = props;
+
+    return (
+        <NumberFormat
+            {...other}
+            getInputRef={inputRef}
+            onValueChange={values => {
+                onChange({
+                    target: {
+                        value: values.value,
+                    },
+                });
+            }}
+            suffix=" ms"
+            allowNegative={false}
+        />
+    );
+}
+
+
+const Configuration = connect(state => ({
+    constants: state.constants,
+}), dispatch => ({
+    setNumPowerLevels(numLevels) {
+        numLevels = parseInt(numLevels);
+        if (numLevels > 0) {
+            dispatch({type: 'CHANGE_NUM_POWER_DEFINITION_LEVELS', payload: numLevels});
+        }
+    },
+    setPowerLevel(levelIdx, powerLevel) {
+        let value = parseInt(powerLevel);
+        if (value >= 0 && value <= 100) {
+            dispatch({ type: 'CHANGE_POWER_DEFINITION', payload: { levelIdx, value: value/100 } })
+        }
+    },
+    setRampUp(value) {
+        if (value >= 0) {
+            dispatch({ type: 'CHANGE_RAMP_UP_TIME', payload: value / 1000 })
+        }
+    },
+}))(({ constants, setNumPowerLevels, setPowerLevel, setRampUp }) => {
+    return <div>
+        <Typography variant="h5">Motor power levels</Typography>
+        <div><TextField label="Num. power levels"
+                        value={constants.power_definitions.length}
+                        onChange={(e) => { setNumPowerLevels(e.target.value); }}
+                        margin="normal"
+                        InputProps={{
+                            inputComponent: NumberInput,
+                        }}/></div>
+        { constants.power_definitions.map((power_level, power_idx) =>
+            <div key={power_idx}>
+                <TextField label={`Level ${power_idx+1}`}
+                           value={power_level * 100}
+                           onChange={e => { setPowerLevel(power_idx, parseInt(e.target.value)); }}
+                           margin="normal"
+                           InputProps={{
+                               inputComponent: PercentNumberInput,
+                           }}/>
+            </div>) }
+        <Typography variant="h5" style={{ marginTop: 20 }}>Ramp up time</Typography>
+        <Typography>
+            Amount of time it takes for going to 0 to 100% of motor power.
+        </Typography>
+        <div><TextField value={parseInt(constants.ramp_up_time_from_zero_to_max_in_sec * 1000)}
+                        onChange={(e) => { setRampUp(parseInt(e.target.value)); }}
+                        margin="normal"
+                        InputProps={{
+                            inputComponent: MsNumberInput,
+                        }}/></div>
+    </div>;
 });
 
 

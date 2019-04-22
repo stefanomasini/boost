@@ -13,12 +13,17 @@ def create_http_app(storage, http_server_input_message_queue, get_compilation_er
 
     @app.route('/whole_state')
     async def whole_state():
+        motors_constants = storage.get_motors_constants()
         return jsonify({
             'programs': storage.get_programs(),
             'compilation_errors': get_compilation_errors_for_json()['errors'],
             'program_running': is_program_running(),
             'auto_run': storage.get_auto_run(),
             'device_names': device_names,
+            'constants': {
+                'power_definitions': motors_constants.power_definitions,
+                'ramp_up_time_from_zero_to_max_in_sec': motors_constants.ramp_up_time_from_zero_to_max_in_sec,
+            },
         })
 
     @app.route('/command/savePrograms', methods=['POST'])
@@ -58,6 +63,12 @@ def create_http_app(storage, http_server_input_message_queue, get_compilation_er
     @app.route('/command/resetMotors', methods=['POST'])
     async def command_reset_motors():
         reset_motors()
+        return Response('Ok', mimetype='text/plain')
+
+    @app.route('/command/saveConstants', methods=['POST'])
+    async def command_save_constants():
+        data = await request.json
+        storage.set_constants(data)
         return Response('Ok', mimetype='text/plain')
 
     async def ws_sending():

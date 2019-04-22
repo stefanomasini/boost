@@ -77,6 +77,10 @@ class Storage(object):
             },
             'meta': {
                 'auto_run': None,
+                'constants': {
+                    'power_definitions': [0.2, 0.4, 0.6, 0.8, 1.0],
+                    'ramp_up_time_from_zero_to_max_in_sec': 0.5,
+                },
             },
         }
 
@@ -96,7 +100,11 @@ class Storage(object):
         return True
 
     def get_motors_constants(self):
-        return MotorControllerConstants([0.2, 0.4, 0.6, 0.8, 1.0], 0.5)
+        return MotorControllerConstants(self.data['meta']['constants']['power_definitions'], self.data['meta']['constants']['ramp_up_time_from_zero_to_max_in_sec'])
+
+    def set_constants(self, constants):
+        self.data['meta']['constants'] = constants
+        self._save_meta()
 
     def get_current_program(self):
         return self.data['programs']['all_programs'][self.data['programs']['current_program_id']]
