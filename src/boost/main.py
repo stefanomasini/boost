@@ -6,6 +6,7 @@ from .planner import Planner
 from .clock import Clock
 from .language.parser import parse_program
 from .executor import ExecutionContext, WarningRuntimeMessage
+from .constants import RuntimeParameters
 import asyncio
 
 
@@ -107,7 +108,9 @@ class Application(object):
     def _compile_program(self):
         program_code = self.storage.get_current_program()['code']
         errors = []
-        program = parse_program(program_code, self.symbols.keys(), errors)
+        motors_constants = self.storage.get_motors_constants()
+        runtime_parameters = RuntimeParameters(self.shaft_encoder.num_codes, len(motors_constants.power_definitions))
+        program = parse_program(program_code, self.symbols.keys(), runtime_parameters, errors)
         return program, errors
 
     def compile_program(self):

@@ -107,10 +107,10 @@ def parse_blocks(program, errors):
             yield BlockRoot(current_block)
 
 
-def parse_program_line(program_line, functions, symbol_names, errors):
+def parse_program_line(program_line, functions, symbol_names, runtime_parameters, errors):
     function_execution_mo = FUNCTION_EXECUTION_RE.match(program_line.text)
     if function_execution_mo:
-        return parse_function_call(function_execution_mo, program_line, functions, symbol_names, errors)
+        return parse_function_call(function_execution_mo, program_line, functions, symbol_names, runtime_parameters, errors)
 
     time_from_start_mo = TIME_FROM_START_RE.match(program_line.text)
     if time_from_start_mo:
@@ -134,12 +134,12 @@ predefined_functions = {
 }
 
 
-def parse_function_call(function_execution_mo, program_line, functions, symbol_names, errors):
+def parse_function_call(function_execution_mo, program_line, functions, symbol_names, runtime_parameters, errors):
     function_name = function_execution_mo.group(1)
     params_string = function_execution_mo.group(2)
     locals_dict = dict((v, v) for v in symbol_names)
     if function_name in predefined_functions:
-        return predefined_functions[function_name].parse(program_line, function_name, params_string, locals_dict, errors)
+        return predefined_functions[function_name].parse(program_line, function_name, params_string, locals_dict, runtime_parameters, errors)
     elif function_name in functions:
         try:
             param_list = eval('tuple' + params_string, locals_dict)
@@ -170,7 +170,7 @@ def parse_time_from_start(mo, program_line, errors):
     return millis
 
 
-def parse_program(program_text, symbol_names, errors):
+def parse_program(program_text, symbol_names, runtime_parameters, errors):
     block_errors = []
     blocks = list(parse_blocks(program_text, block_errors))
     if block_errors:
@@ -189,11 +189,11 @@ def parse_program(program_text, symbol_names, errors):
     function_blocks = [b for b in blocks if isinstance(b, BlockFunction)]
     function_names = set(b.name for b in function_blocks)
 
-    commands = parse_commands(root_block.lines, function_names, symbol_names, errors)
-    functions = dict((b.name, Function(b.parameter, parse_commands(b.lines, function_names, list(symbol_names) + ([b.parameter] if b.parameter else []), errors))) for b in function_blocks)
+    commands = parse_commands(root_block.lines, function_names, symbol_names, runtime_parameters, errors)
+    functions = dict((b.name, Function(b.parameter, parse_commands(b.lines, function_names, list(symbol_names) + ([b.parameter] if b.parameter else []), runtime_parameters, errors))) for b in function_blocks)
     return Program(commands, functions)
 
 
-def parse_commands(program_lines, functions, symbol_names, errors):
-    return [parse_program_line(program_line, functions, symbol_names, errors) for program_line in program_lines]
+def parse_commands(program_lines, functions, symbol_names, runtime_parameters, errors):
+    return [parse_program_line(program_line, functions, symbol_names, runtime_parameters, errors) for program_line in program_lines]
 

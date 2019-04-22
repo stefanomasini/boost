@@ -3,13 +3,11 @@ from functools import partial
 from .language.errors import ProgramSyntaxError
 
 
-TURN_TO_RANGE = (1, 64)
-SPEED_RANGE = (1, 5)
-
-
 class CommandTurn(namedtuple('CommandTurn', 'direction target speed to', defaults=(None,))):
     @classmethod
-    def parse(cls, program_line, function_name, params_string, locals_dict, errors):
+    def parse(cls, program_line, function_name, params_string, locals_dict, runtime_parameters, errors):
+        turn_to_range = (1, runtime_parameters.num_turn_sections)
+        speed_range = (1, runtime_parameters.num_speeds)
         try:
             command = eval(cls.__name__ + params_string, {cls.__name__: partial(cls, function_name)}, locals_dict)
         except Exception as err:
@@ -19,14 +17,14 @@ class CommandTurn(namedtuple('CommandTurn', 'direction target speed to', default
             if not isinstance(command.to, int):
                 errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be an integer'))
                 return
-            if not (TURN_TO_RANGE[0] <= command.to <= TURN_TO_RANGE[1]):
-                errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be in range {0}-{1}'.format(*TURN_TO_RANGE)))
+            if not (turn_to_range[0] <= command.to <= turn_to_range[1]):
+                errors.append(ProgramSyntaxError(program_line.line_num, '"to" parameter must be in range {0}-{1}'.format(*turn_to_range)))
                 return
         if not isinstance(command.speed, int):
             errors.append(ProgramSyntaxError(program_line.line_num, '"speed" parameter must be an integer'))
             return
-        if not (SPEED_RANGE[0] <= command.speed <= SPEED_RANGE[1]):
-            errors.append(ProgramSyntaxError(program_line.line_num, '"speed" parameter must be in range {0}-{1}'.format(*SPEED_RANGE)))
+        if not (speed_range[0] <= command.speed <= speed_range[1]):
+            errors.append(ProgramSyntaxError(program_line.line_num, '"speed" parameter must be in range {0}-{1}'.format(*speed_range)))
             return
         return command
 
@@ -40,7 +38,7 @@ class CommandTurn(namedtuple('CommandTurn', 'direction target speed to', default
 
 class CommandStop(namedtuple('CommandStop', 'target')):
     @classmethod
-    def parse(cls, program_line, function_name, params_string, locals_dict, errors):
+    def parse(cls, program_line, function_name, params_string, locals_dict, runtime_parameters, errors):
         try:
             command = eval(cls.__name__ + params_string, {cls.__name__: cls}, locals_dict)
         except Exception as err:
@@ -58,7 +56,7 @@ class CommandStop(namedtuple('CommandStop', 'target')):
 
 class CommandRestartProgram(object):
     @classmethod
-    def parse(cls, program_line, function_name, params_string, locals_dict, errors):
+    def parse(cls, program_line, function_name, params_string, locals_dict, runtime_parameters, errors):
         return cls()
 
     def execute(self, execution_context):

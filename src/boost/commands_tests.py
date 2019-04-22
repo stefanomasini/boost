@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import unittest
 from boost.language.parser import parse_program
 from .executor import ExecutionContext, WarningRuntimeMessage
+from .constants import RuntimeParameters
 
 
 CODE_SAMPLE_1 = """
@@ -58,10 +59,11 @@ class CommandsTestSuite(unittest.TestCase):
         self.clock = FakeClock(datetime(2019, 4, 9, 22, 5, 0))  # 9 Apr 2019 - 22:05
         self.log_lines = []
         self.symbols = {'A': FakeMotor(self.clock, 'A', self.log_lines.append), 'B': FakeMotor(self.clock, 'B', self.log_lines.append)}
+        self.runtime_parameters = RuntimeParameters(64, 5)
 
     def _compile_program(self, program_code):
         errors = []
-        program = parse_program(program_code, self.symbols.keys(), errors)
+        program = parse_program(program_code, self.symbols.keys(), self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         return program
 

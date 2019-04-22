@@ -4,6 +4,7 @@ from .parser import parse_lines, parse_program_line, parse_program, \
     parse_blocks, ProgramSyntaxError, \
     BlockFunction, BlockRoot, \
     CommandTurn, CommandTimeFromStart, CommandTimeJump, CommandFunctionCall, Function
+from ..constants import RuntimeParameters
 
 
 CODE_SAMPLE_INDENTATION_ERROR = """
@@ -107,6 +108,7 @@ restart_program()
 class ParserTestSuite(unittest.TestCase):
     def setUp(self):
         self.local_variables = ('A', 'B')
+        self.runtime_parameters = RuntimeParameters(64, 5)
 
     def test_indentation_error(self):
         errors = []
@@ -162,43 +164,43 @@ class ParserTestSuite(unittest.TestCase):
 
     def test_parsing_command_right(self):
         errors = []
-        command = parse_program_line(ProgramLine(text='right(A, to=12, speed=1)', indentation=1, line_num=4), {}, self.local_variables, errors)
+        command = parse_program_line(ProgramLine(text='right(A, to=12, speed=1)', indentation=1, line_num=4), {}, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(command, CommandTurn(direction='right', target='A', to=12, speed=1))
 
     def test_parsing_command_left(self):
         errors = []
-        command = parse_program_line(ProgramLine(text='left(A, to=12, speed=1)', indentation=1, line_num=4), {}, self.local_variables, errors)
+        command = parse_program_line(ProgramLine(text='left(A, to=12, speed=1)', indentation=1, line_num=4), {}, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(command, CommandTurn(direction='left', target='A', to=12, speed=1))
 
     def test_parsing_command_left_with_local_var(self):
         errors = []
-        command = parse_program_line(ProgramLine(text='left(X, to=12, speed=1)', indentation=1, line_num=4), {}, self.local_variables + ('X',), errors)
+        command = parse_program_line(ProgramLine(text='left(X, to=12, speed=1)', indentation=1, line_num=4), {}, self.local_variables + ('X',), self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(command, CommandTurn(direction='left', target='X', to=12, speed=1))
 
     def test_parsing_function_call(self):
         errors = []
-        command = parse_program_line(ProgramLine(text='foo(A)', indentation=1, line_num=4), {'foo'}, self.local_variables, errors)
+        command = parse_program_line(ProgramLine(text='foo(A)', indentation=1, line_num=4), {'foo'}, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(command, CommandFunctionCall(function_name='foo', params=('A',)))
 
     def test_parsing_command_time_from_start(self):
         errors = []
-        command = parse_program_line(ProgramLine(text='0:03', indentation=1, line_num=4), {}, self.local_variables, errors)
+        command = parse_program_line(ProgramLine(text='0:03', indentation=1, line_num=4), {}, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(command, CommandTimeFromStart(millis=3000))
 
     def test_parsing_command_time_jump(self):
         errors = []
-        command = parse_program_line(ProgramLine(text='+1:03', indentation=1, line_num=4), {}, self.local_variables, errors)
+        command = parse_program_line(ProgramLine(text='+1:03', indentation=1, line_num=4), {}, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(command, CommandTimeJump(millis=63000))
 
     def test_parsing_program(self):
         errors = []
-        commands, functions = parse_program(CODE_SAMPLE_2, self.local_variables, errors)
+        commands, functions = parse_program(CODE_SAMPLE_2, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
         self.assertEqual(commands, [
             CommandTimeFromStart(millis=0),
@@ -221,15 +223,15 @@ class ParserTestSuite(unittest.TestCase):
 
     def test_parse_function_at_bottom(self):
         errors = []
-        parse_program(FUNCTION_AT_BOTTOM, self.local_variables, errors)
+        parse_program(FUNCTION_AT_BOTTOM, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
 
     def test_function_without_body(self):
         errors = []
-        parse_program(FUNCTION_WITHOUT_BODY, self.local_variables, errors)
+        parse_program(FUNCTION_WITHOUT_BODY, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [ProgramSyntaxError(line_num=3, message='Function without a body')])
 
     def test_parse_function_with_stop(self):
         errors = []
-        parse_program(FUNCTION_WITH_STOP, self.local_variables, errors)
+        parse_program(FUNCTION_WITH_STOP, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
