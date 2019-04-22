@@ -1,7 +1,32 @@
-# Start at second 2
-0:02
+# This is a sample program
+
+# Lines beginning with "#" are comments, and have no effect
+
+# Wait until 1 minute and 5 seconds have passed
+1:05
+
+# Wait another 3 seconds
++0:03
+
+# This command rotates the head A (left) to the right
+# (i.e. Counter-ClockWise if you look from top)
+# It goes at speed 3 and stops when it reaches position 12
 right(A, to=12, speed=3)
+
+# This command starts rotating head B to the left
+# Note that heads A and B start rotating at the same time
+left(B, speed=2)
 
 # Wait 3 seconds
 +0:03
-left(A, to=1, speed=5)
+
+# Then stop head B
+# Note that at this point head A has probably already
+# reached position 12, and has therefore stopped
+stop(B)
+
+# Wait 10 seconds...
++0:10
+
+# Then restart from the beginning, forever
+restart_program()
