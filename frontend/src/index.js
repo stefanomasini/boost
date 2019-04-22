@@ -165,6 +165,11 @@ function reducer(state = initialState, action) {
                 ...state,
                 log_lines: state.log_lines.concat([{type: 'Server', message: action.payload, ts: now_str()}]),
             };
+        case 'EMPTY_LOG':
+            return {
+                ...state,
+                log_lines: [],
+            };
         case 'SET_PROGRAM_RUNNING':
             return {
                 ...state,

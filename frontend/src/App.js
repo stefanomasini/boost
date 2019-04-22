@@ -371,8 +371,11 @@ const CodeEditor = connect(state => ({
     setProgramCode(code) {
         dispatch({type: 'CHANGE_PROGRAM_CODE', payload: code});
     },
+    emptyLog() {
+        dispatch({type: 'EMPTY_LOG'});
+    },
 }))(function CodeEditor({ classes, programCode, setProgramCode, compilation_errors, program_running, log_lines, device_names,
-                          runCode, stopCode, motor_power, shaft_position, auto_run, toggleAutoRun, changeMotorPower, testing_motors, resetMotors }) {
+                          runCode, stopCode, motor_power, shaft_position, auto_run, toggleAutoRun, changeMotorPower, testing_motors, resetMotors, emptyLog }) {
     let canRun = compilation_errors.length === 0;
     log_lines = [...log_lines];
     log_lines.reverse();
@@ -417,7 +420,7 @@ const CodeEditor = connect(state => ({
 
                 { compilation_errors.length > 0 && <Paper className={classes.codeErrors}>
                     <Typography variant="h5" color="secondary" gutterBottom>
-                        Errors in the program:
+                        Errors in the program
                     </Typography>
                     <Table>
                         <TableBody>
@@ -430,8 +433,9 @@ const CodeEditor = connect(state => ({
                 </Paper>}
 
                 { log_lines.length > 0 && <Paper className={classes.codeErrors}>
-                    <Typography variant="h5" gutterBottom>
-                        Log:
+                    <Typography variant="h5" gutterBottom style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <span>Log</span>
+                        <DeleteIcon onClick={emptyLog}/>
                     </Typography>
                     <div className={classes.logTable}>
                         <Table padding="dense">
