@@ -428,9 +428,9 @@ const CodeEditor = connect(state => ({
                     <div className={classes.logTable}>
                         <Table padding="dense">
                             <TableBody>
-                            { log_lines.map((logline, idx) => <TableRow key={idx}>
-                                <TableCell><Typography variant="body1"><i>{logline.ts}</i></Typography></TableCell>
-                                <TableCell><Typography><i>{logline.type}</i></Typography></TableCell>
+                            { log_lines.map((logline, idx) => <TableRow key={idx} style={{ height: 30 }}>
+                                <TableCell style={{ width: 180 }}><Typography variant="body1"><i>{logline.ts}</i></Typography></TableCell>
+                                <TableCell style={{ width: 80 }}><Typography><i>{logline.type}</i></Typography></TableCell>
                                 <TableCell><Typography>{logline.message}</Typography></TableCell>
                             </TableRow>) }
                             </TableBody>
