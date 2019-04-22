@@ -14,8 +14,15 @@ import TableCell from '@material-ui/core/TableCell';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
+import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 // import Badge from '@material-ui/core/Badge';
 import MenuIcon from '@material-ui/icons/Menu';
 import ListIcon from '@material-ui/icons/List';
@@ -290,8 +297,11 @@ const ProgramChoice = connect(state => {
 }, dispatch => ({
     chooseProgramId(program_id) {
         dispatch({type: 'CHANGE_CURRENT_PROGRAM_ID', payload: program_id});
-    }
-}))(function ProgramChoice({ programs, chooseProgramId }) {
+    },
+    createNewProgram() {
+        dispatch({type: 'CREATE_NEW_PROGRAM'});
+    },
+}))(function ProgramChoice({ programs, chooseProgramId, createNewProgram }) {
     const [open, setOpen] = useState(false);
     let anchorEl = null;
     function toggleOpen() {
@@ -328,7 +338,8 @@ const ProgramChoice = connect(state => {
                     <Paper>
                       <ClickAwayListener onClickAway={close}>
                         <MenuList>
-                            { programs.map(program => <MenuItem key={program.program_id} onClick={() => _choose(program.program_id)}>{program.name}</MenuItem>) }
+                            { programs.map(program => <MenuItem key={program.program_id} onClick={() => { _choose(program.program_id); toggleOpen(); }}>{program.name}</MenuItem>) }
+                            <MenuItem onClick={() => { createNewProgram(); toggleOpen(); }}><AddIcon/><i>Create new …</i></MenuItem>
                         </MenuList>
                       </ClickAwayListener>
                     </Paper>
@@ -484,20 +495,50 @@ const ProgramName = connect(state => ({
 }), dispatch => ({
     setProgramName(programName) {
         dispatch({type: 'CHANGE_PROGRAM_NAME', payload: programName});
-    }
-}))(({ programName, setProgramName }) => {
-    const [state, setState] = useState({ editing: false });
+    },
+    deleteCurrentProgram() {
+        dispatch({type: 'DELETE_CURRENT_PROGRAM'});
+    },
+}))(({ programName, setProgramName, deleteCurrentProgram }) => {
+    const [state, setState] = useState({ editing: false, deleting: false });
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     function onBlur() {
-        setProgramName(state.value);
-        setState({ editing: false });
+        setTimeout(function () {
+            setProgramName(state.value);
+            setState({ editing: false });
+        }, 50);
     }
 
-    return (
+    function closeDialog() {
+        setDialogOpen(false);
+    }
+
+    return [
         state.editing
-            ? <TextField value={state.value} onChange={e => setState({ editing: true, value: e.target.value })} autoFocus={true} onBlur={onBlur}/>
-            : <span onClick={() => setState({ editing: true, value: programName })}>{programName}</span>
-    );
+            ? <TextField key={1} value={state.value}
+                         onChange={e => setState({ editing: true, value: e.target.value })}
+                         autoFocus={true} onBlur={onBlur}
+                         onKeyUp={e => { if (e.keyCode === 13) { onBlur(); }}}/>
+            : <span key={1} onClick={() => setState({ editing: true, value: programName })}>{programName}</span>,
+        <span key={2} onClick={() => { setDialogOpen(true); }}>{state.editing && <DeleteIcon/>}</span>,
+        <Dialog key={3} open={dialogOpen} onClose={closeDialog}>
+            <DialogTitle>Delete program</DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    Are you sure you want to delete "<b>{programName}</b>"?
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={closeDialog} color="primary">
+                    Cancel
+                </Button>
+                <Button onClick={() => { deleteCurrentProgram(); closeDialog(); }} color="primary" autoFocus>
+                    Yes, Delete
+                </Button>
+            </DialogActions>
+        </Dialog>,
+    ];
 });
 
 

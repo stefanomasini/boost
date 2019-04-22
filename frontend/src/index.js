@@ -90,6 +90,34 @@ function reducer(state = initialState, action) {
                     }
                 },
             };
+        case 'CREATE_NEW_PROGRAM':
+            let new_program_id = Math.max(...Object.keys(state.programs.all_programs).map(parseInt))+1;
+            return {
+                ...state,
+                programs: {
+                    ...state.programs,
+                    all_programs: {
+                        ...state.programs.all_programs,
+                        [new_program_id]: {
+                            name: 'New program',
+                            code: '',
+                        },
+                    },
+                    current_program_id: new_program_id,
+                },
+            };
+        case 'DELETE_CURRENT_PROGRAM':
+            let new_all_programs = {...state.programs.all_programs};
+            delete new_all_programs[state.programs.current_program_id];
+            let _new_program_id = Math.min(...Object.keys(new_all_programs).map(parseInt));
+            return {
+                ...state,
+                programs: {
+                    ...state.programs,
+                    all_programs: new_all_programs,
+                    current_program_id: _new_program_id,
+                },
+            };
         case 'CLEAR_COMPILATION_ERRORS':
             return {
                 ...state,
