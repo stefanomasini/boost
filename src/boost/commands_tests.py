@@ -69,7 +69,7 @@ class CommandsTestSuite(unittest.TestCase):
 
     def test_running_program(self):
         program = self._compile_program(CODE_SAMPLE_1)
-        execution_context = ExecutionContext(program, self.clock, self.symbols, lambda m: self.log_lines.append(m.message))
+        execution_context = ExecutionContext(program, self.clock, self.symbols, lambda m: self.log_lines.append(m.message), lambda _: None)
         self.assertTrue(execution_context.execute_if_scheduled())
         self.assertFalse(execution_context.execute_if_scheduled())
         for _ in range(10000):

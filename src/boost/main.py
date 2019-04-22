@@ -31,21 +31,15 @@ class HttpServerInputMessageQueue(object):
 
 
 class Motor(object):
-    def __init__(self, device, planner, log_message):
+    def __init__(self, device, planner):
         self.device = device
         self.planner = planner
-        self.log_message = log_message
 
     def turn(self, direction, to, speed):
         self.planner.set_plan(self.device, to, speed, 'cw' if direction == 'left' else 'ccw')
-        if to:
-            self.log_message('{0} turning {1} to {2} at speed {3}'.format(self.device, direction, to, speed))
-        else:
-            self.log_message('{0} turning {1} at speed {2}'.format(self.device, direction, speed))
 
     def stop(self):
         self.planner.set_stop_plan(self.device)
-        self.log_message('{0} stopping'.format(self.device))
 
 
 def build_hardare_adapters(config):
@@ -71,7 +65,7 @@ class Application(object):
         self.shaft_encoder = ShaftEncoders(self.sensors_adapter, config.sensor_devices, self.clock, config.stasis_timeout_in_sec, config.max_speed_in_deg_per_sec, print)
         self.motors_controller = MotorsController(self.clock, config.sensor_devices.keys())
         self.planner = Planner(self.shaft_encoder, self.motors_controller)
-        self.symbols = {'A': Motor('A', self.planner, self.log_message), 'B': Motor('B', self.planner, self.log_message)}
+        self.symbols = {'A': Motor('A', self.planner), 'B': Motor('B', self.planner)}
         self.loop = asyncio.get_event_loop()
         self.http_server_input_message_queue = HttpServerInputMessageQueue(self.loop)
         device_names = list(config.sensor_devices.keys())
@@ -162,7 +156,7 @@ class Application(object):
     def run_program(self):
         program = self.compile_program()
         if program:
-            self.execution_context = ExecutionContext(program, self.clock, self.symbols, self.on_runtime_error)
+            self.execution_context = ExecutionContext(program, self.clock, self.symbols, self.on_runtime_error, self.log_message)
             self.log_message('Program started')
             return True
         else:

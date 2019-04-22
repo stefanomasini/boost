@@ -26,12 +26,13 @@ class Scope(object):
 
 
 class ExecutionContext(object):
-    def __init__(self, program, clock, symbols, emit_messages):
+    def __init__(self, program, clock, symbols, emit_messages, log_message):
         self.clock = clock
         self.functions = program.functions
         self.program = program
         self.symbols = symbols
         self.emit_messages = emit_messages
+        self.log_message = log_message
         self.terminated = False
         self.scopes = None
         self.start_time = None

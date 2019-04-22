@@ -29,6 +29,10 @@ class CommandTurn(namedtuple('CommandTurn', 'direction target speed to', default
         return command
 
     def execute(self, execution_context):
+        if self.to:
+            execution_context.log_message('{0} turning {1} to {2} at speed {3}'.format(self.target, self.direction, self.to, self.speed))
+        else:
+            execution_context.log_message('{0} turning {1} at speed {2}'.format(self.target, self.direction, self.speed))
         motor = execution_context.get_symbol(self.target)
         motor.turn(self.direction, self.to, self.speed)
 
@@ -47,6 +51,7 @@ class CommandStop(namedtuple('CommandStop', 'target')):
         return command
 
     def execute(self, execution_context):
+        execution_context.log_message('Stopping {0}'.format(self.target))
         motor = execution_context.get_symbol(self.target)
         motor.stop()
 
@@ -60,12 +65,14 @@ class CommandRestartProgram(object):
         return cls()
 
     def execute(self, execution_context):
+        execution_context.log_message('Restarting program')
         execution_context.initialize_execution()
         return True  # "blocking" - really, just restarting and scheduling next execution at time 0 (i.e. ASAP)
 
 
 class CommandTimeFromStart(namedtuple('CommandTimeFromStart', 'millis')):
     def execute(self, execution_context):
+        execution_context.log_message('Waiting until second {0:.2f}'.format(self.millis / 1000.0))
         execution_context.schedule_next_execution_at_time(self.millis)
         execution_context.advance_pc()
         return True  # Blocking - stop executing other commands
@@ -73,6 +80,7 @@ class CommandTimeFromStart(namedtuple('CommandTimeFromStart', 'millis')):
 
 class CommandTimeJump(namedtuple('CommandTimeJump', 'millis')):
     def execute(self, execution_context):
+        execution_context.log_message('Waiting {0:.2f} seconds'.format(self.millis / 1000.0))
         execution_context.schedule_next_execution_in_ms(self.millis)
         execution_context.advance_pc()
         return True  # Blocking - stop executing other commands
@@ -80,6 +88,7 @@ class CommandTimeJump(namedtuple('CommandTimeJump', 'millis')):
 
 class CommandFunctionCall(namedtuple('CommandFunctionCall', 'function_name params')):
     def execute(self, execution_context):
+        execution_context.log_message('Calling function {0}'.format(self.function_name))
         function = execution_context.functions[self.function_name]
         symbol_mapping = []
         if function.parameter and len(self.params) > 0:
