@@ -186,7 +186,7 @@ class Application(object):
             await asyncio.sleep(self.config.monitor_motors_power_every_ms / 1000.0)
 
     def cleanup_terminated_program(self):
-        self.log_message('Program terminated')
+        self.log_message('Program terminated. Stopping motors.')
         self.send_redux_message('SET_PROGRAM_RUNNING', False)
         self.execution_context = None
         self.motors_controller.stop_all_motors(self.storage.get_motors_constants())
