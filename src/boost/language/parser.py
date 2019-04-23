@@ -177,6 +177,9 @@ def parse_program(program_text, symbol_names, runtime_parameters, errors):
         errors.extend(block_errors)
         return
 
+    if len(blocks) == 0:
+        return None
+
     root_blocks = [b for b in blocks if isinstance(b, BlockRoot)]
     if len(root_blocks) == 0:
         errors.append(ProgramSyntaxError(None, 'Missing root-level commands'))

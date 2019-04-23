@@ -235,3 +235,8 @@ class ParserTestSuite(unittest.TestCase):
         errors = []
         parse_program(FUNCTION_WITH_STOP, self.local_variables, self.runtime_parameters, errors)
         self.assertEqual(errors, [])
+
+    def test_parse_empty_program(self):
+        errors = []
+        parse_program('', self.local_variables, self.runtime_parameters, errors)
+        self.assertEqual(errors, [])
