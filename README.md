@@ -1,6 +1,8 @@
 # boost
 Rotating bust
 
+[Demo here](https://youtu.be/1ec1DbKIe5I)
+
 ## Software
 
 See [Development](./src/README.md)
