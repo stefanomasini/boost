@@ -77,7 +77,7 @@ class ShaftEncoders(object):
     def _code_to_position(self, code):
         code_str = ''.join(code)
         value = self.gray_code_to_integer_map[code_str]
-        angle = 360.0 / self.num_codes * value
+        angle = 360.0 - 360.0 / self.num_codes * value
         return WheelPosition(value, angle, code_str)
 
     def _calculate_angular_speed(self, old_position, new_position, elapsed_time):
