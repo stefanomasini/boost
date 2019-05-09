@@ -39,7 +39,9 @@ class GPIOSensorsAdapter(object):
     def _read_sensor(self, sensor_pin):
         # The sensor returns a high value (1) for black, and a low value (0) for white, which is what we want
         # But the actual LED on the sensor is ON for white (i.e. 0) and OFF for black (i.e. 1)
-        return str(GPIO.input(sensor_pin))
+
+        # Note: in the final version of the hardware, black and white were swapped. Hence the "1-"
+        return str(1-GPIO.input(sensor_pin))
 
 
 if __name__ == '__main__':
